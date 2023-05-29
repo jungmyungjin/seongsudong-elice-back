@@ -1,6 +1,7 @@
-import mysql, { MysqlError, ConnectionConfig } from 'mysql';
 import dotenv from 'dotenv';
 dotenv.config();
+import mysql, { MysqlError, ConnectionConfig } from 'mysql';
+
 
 const connectionConfig: ConnectionConfig = {
     host: process.env.DB_HOST,

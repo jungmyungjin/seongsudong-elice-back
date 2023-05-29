@@ -1,7 +1,7 @@
 import fs from 'fs';
 import { executeQuery } from '../db/index';
 
-const sqlFilePath = './src/db/members.sql'; // SQL 파일의 경로
+const sqlFilePath = './src/db/member.sql'; // SQL 파일의 경로
 
 const membersTableSchema = fs.readFileSync(sqlFilePath, 'utf-8');
 
