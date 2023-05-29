@@ -10,6 +10,6 @@ export const createSeatsTable = async () => {
     await executeQuery(seatTableSchema);
     console.log('Seats table created successfully');
   } catch (error) {
-    console.error('Error creating reservation table:', error);
+    console.error('Error creating Seats table:', error);
   }
 };
