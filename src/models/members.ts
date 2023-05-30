@@ -1,5 +1,5 @@
 import fs from 'fs';
-import { executeQuery, QueryParams } from '../db/index';
+import { executeQuery } from '../db/index';
 
 const sqlFilePath = './src/db/member.sql'; // SQL 파일의 경로
 
