@@ -1,5 +1,5 @@
 import fs from 'fs';
-import { executeQuery } from '../db/index';
+import { executeQuery, QueryParams } from '../db/index';
 
 const sqlFilePath = './src/db/member.sql'; // SQL 파일의 경로
 
@@ -13,4 +13,5 @@ export const createMembersTable = async () => {
     console.error('Error creating members table:', error);
   }
 };
+
 
