@@ -1,4 +1,4 @@
-import mysql from 'mysql';
+import mysql from 'mysql2';
 
 const con = mysql.createConnection({
   host: process.env.DB_HOST,
