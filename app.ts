@@ -12,6 +12,7 @@ import { createCommentsTable } from './src/models/comments';
 import { createSeatsTable } from './src/models/seats';
 import { createReservationTable } from './src/models/reservations';
 import commentRouter from './src/routes/comment-routes';
+import postRouter from './src/routes/post-routes';
 
 const app = express();
 app.use(express.json());
@@ -25,3 +26,4 @@ app.listen(5000, () => {
 });
 
 app.use('/api/comments', commentRouter);
+app.use('/api/posts', postRouter);
