@@ -8,24 +8,29 @@ import memberRouter from './src/routes/member-routes';
 
 import session from 'express-session';
 import passport from 'passport';
-import { googleCallback, googleCallbackRedirect, googleStrategy } from './src/controllers/members-controllers';
-import {findOrCreateUser} from './src/controllers/members-controllers';
+
+import {findOrCreateUser, googleCallback, googleCallbackRedirect, googleStrategy} from './src/controllers/members-controllers';
 
 
 const app = express();
 app.use(express.json());
 
-app.use(session({
-  secret: 'YourSecretKey',
+// 세션 설정
+const sessionConfig = {
+  secret: 'your-secret-key',
   resave: false,
   saveUninitialized: false,
-}));
+  cookie: {
+    secure: false, // HTTPS가 아닌 경우 false로 설정
+    maxAge: 1000 * 60 * 60, // 세션 유효 기간 (예: 1시간)
+  },
+};
+
+// Express 애플리케이션에 세션 미들웨어 추가
+app.use(session(sessionConfig));
+
 app.use(passport.initialize());
 app.use(passport.session());
-
-app.get('/auth/google', googleStrategy);
-app.get('/auth/google/callback', googleCallback, googleCallbackRedirect);
-
 
 
 
@@ -38,6 +43,8 @@ app.listen(3000, () => {
   console.log('server on!');
 });
 
-app.use('/api/comments', commentRouter);
+
+app.get('/auth/google', googleStrategy);
+app.get('/auth/google/callback', googleCallback, googleCallbackRedirect);
 app.use('/api/members', memberRouter);
-//테이블 재생성방지를 위해 model, sql을 불러오는 함수는 모두 app.ts 삭제처리 하였습니다.
+app.use('/api/comments', commentRouter);

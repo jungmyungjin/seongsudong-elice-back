@@ -87,16 +87,24 @@ export async function findOrCreateUser({ email }: { email: string }): Promise<an
         connection.end();
       }
     }
-  }
+}
 
 
 
 export function googleStrategy(req: Request, res: Response, next: NextFunction) {
-  passport.authenticate('google', { scope: ['profile', 'email'] })(req, res, next);
-}
+    if (req.user) {
+      // 이미 로그인한 사용자인 경우
+      res.redirect('/');
+      console.log('이미 로그인한 사용자입니다.')
+    } else {
+      // 로그인 요청 처리
+      passport.authenticate('google', { scope: ['profile', 'email'] })(req, res, next);
+    }
+  }
+  
 
 export function googleCallback(req: Request, res: Response, next: NextFunction) {
-  passport.authenticate('google', { failureRedirect: '/login' })(req, res, next);
+  passport.authenticate('google', { failureRedirect: '/' })(req, res, next);
 }
 
 export function googleCallbackRedirect(req: Request, res: Response) {
@@ -105,7 +113,19 @@ export function googleCallbackRedirect(req: Request, res: Response) {
       res.redirect('/');
     } else {
       // 로그인 정보가 없을 경우
-      res.redirect('/register');
+      res.redirect('/register'); //cannot get register 떠도 멤버생성은 됨
     }
-  }
-  
+}
+
+export function logout(req: Request, res: Response) {
+    // 세션을 제거하여 로그아웃 처리
+    req.session.destroy((err) => {
+      if (err) {
+        console.error('Error while logging out:', err);
+      } else {
+        console.log('User logged out');
+      }
+      // 로그아웃 후 리다이렉트 또는 응답 처리
+      res.redirect('/'); // 로그아웃 후 리다이렉트할 경로
+    });
+}

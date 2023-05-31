@@ -7,7 +7,7 @@
 <body>
   <h1>Google Login</h1>
   <button onclick="googleLogin()">Google Login</button>
-
+  <button onclick="logout()">로그아웃</button>
   <h2>회원가입</h2>
   <form action="/register" method="POST">
     <label for="name">이름:</label>
@@ -21,7 +21,22 @@
 
   <script>
     function googleLogin() {
-      window.location.href = "/auth/google";
+      window.location.href = "/api/members/auth/google";
+    }
+    function logout() {
+      fetch('/api/members/logout', { method: 'POST' })
+        .then(response => {
+          if (response.ok) {
+            // 로그아웃 성공
+            window.location.href = "/"; // 로그아웃 후 리다이렉트할 경로
+          } else {
+            // 로그아웃 실패
+            console.error('로그아웃 실패');
+          }
+        })
+        .catch(error => {
+          console.error('에러 발생:', error);
+        });
     }
   </script>
 </body>
