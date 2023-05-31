@@ -13,7 +13,7 @@ export const getPostList = async (
     try {
       const category = req.query.category;
       const getNoticesQuery =
-        'SELECT * FROM posts WHERE category = ? ORDER BY created_at DESC';
+        'SELECT id, category, title, images, description, created_at, views, email, name, generation, isAdmin FROM posts LEFT JOIN members ON posts.author_email = members.email WHERE category = ? ORDER BY created_at DESC';
       const getResult = await con.promise().query(getNoticesQuery, [category]);
       return res.status(200).json(getResult[0]);
     } catch (err) {
@@ -23,7 +23,7 @@ export const getPostList = async (
     try {
       const category = req.query.category;
       const getPostsQuery =
-        'SELECT * FROM posts WHERE category = ? ORDER BY created_at DESC';
+        'SELECT id, category, title, images, description, created_at, views, email, name, generation, isAdmin FROM posts LEFT JOIN members ON posts.author_email = members.email WHERE category = ?';
       const getResult = await con.promise().query(getPostsQuery, [category]);
       return res.status(200).json(getResult[0]);
     } catch (err) {
@@ -34,7 +34,7 @@ export const getPostList = async (
       const email = req.query.email;
       console.log(email);
       const getMemberPostsQuery =
-        'SELECT * FROM posts WHERE author_email = ? ORDER BY created_at DESC';
+        'SELECT id, category, title, images, description, created_at, views, email, name, generation, isAdmin FROM posts LEFT JOIN members ON posts.author_email = members.email WHERE author_email = ? ORDER BY created_at DESC';
       const getResult = await con.promise().query(getMemberPostsQuery, [email]);
       return res.status(200).json(getResult[0]);
     } catch (err) {
@@ -74,7 +74,7 @@ export const writePost = async (
 
     // 생성 데이터 반환
     const postId = (result as RowDataPacket).insertId;
-    const getPostQuery = `SELECT * FROM posts WHERE id = ${postId}`;
+    const getPostQuery = `SELECT id, category, title, images, description, created_at, views, email, name, generation, isAdmin FROM posts LEFT JOIN members ON posts.author_email = members.email WHERE id = ${postId}`;
     const getResult = await con.promise().query(getPostQuery);
 
     return res.status(200).json(getResult[0]);
@@ -91,9 +91,10 @@ export const getPost = async (
 ) => {
   try {
     const postId = req.params.postId;
-    const getPostQuery = 'SELECT * FROM posts WHERE id = ?;';
+    const getPostQuery =
+      'SELECT id, category, title, images, description, created_at, views, email, name, generation, isAdmin FROM posts LEFT JOIN members ON posts.author_email = members.email WHERE id = ?;';
     const getResult = await con.promise().query(getPostQuery, [postId]);
-
+    console.log(getResult);
     return res.status(200).json(getResult[0]);
   } catch (err) {
     next(err);
@@ -109,13 +110,13 @@ export const editPost = async (
   try {
     const postId = req.params.postId;
     const { title, images, description } = req.body;
-    const updatePostQuery = ` UPDATE posts SET title=?, images=?, description=? WHERE id = ${postId}`;
+    const updatePostQuery = ` UPDATE posts SET title = ?, images = ?, description = ? WHERE id = ${postId}`;
     const [updateResult] = await con
       .promise()
       .query(updatePostQuery, [title, images, description]);
 
     // 수정 데이터 반환
-    const getUpdatedPostQuery = `SELECT * FROM posts WHERE id=?`;
+    const getUpdatedPostQuery = `SELECT id, category, title, images, description, created_at, views, email, name, generation, isAdmin FROM posts LEFT JOIN members ON posts.author_email = members.email WHERE id = ?`;
     const [updatedPost] = await con
       .promise()
       .query(getUpdatedPostQuery, [postId]);
