@@ -2,8 +2,6 @@ import { Request, Response, NextFunction } from 'express';
 import { RowDataPacket } from 'mysql2/promise';
 
 import con from '../../connection';
-import { request } from 'http';
-import { error } from 'console';
 
 // 게시물 조회
 export const getPostList = async (
@@ -133,11 +131,24 @@ export const getPost = async (
 ) => {
   try {
     const postId = req.params.postId;
+
     const getPostQuery =
       'SELECT id, category, title, images, description, created_at, views, email, name, generation, isAdmin FROM posts LEFT JOIN members ON posts.author_email = members.email WHERE id = ?;';
-    const getResult = await con.promise().query(getPostQuery, [postId]);
-    console.log(getResult);
-    return res.status(200).json(getResult[0]);
+    const postResult = await con.promise().query(getPostQuery, [postId]);
+    const postData = Array.isArray(postResult[0]) ? postResult[0][0] : null;
+
+    const getCommentsQuery =
+      'SELECT * FROM comments WHERE post_id = ? ORDER BY created_at DESC;';
+    const commentsResult = await con
+      .promise()
+      .query(getCommentsQuery, [postId]);
+    const commentsData = commentsResult[0];
+
+    const resultData = {
+      postData: postData,
+      commentsData: commentsData,
+    };
+    return res.status(200).json(resultData);
   } catch (err) {
     next(err);
   }
@@ -177,10 +188,17 @@ export const removePost = async (
 ) => {
   try {
     const postId = req.params.postId;
+    // 선 댓글 삭제
+    const deleteComments = 'DELETE FROM comments WHERE post_id = ?';
+    const commentsResult = await con.promise().query(deleteComments, [postId]);
+    // 후 게시글 삭제
     const deletePostQuery = 'DELETE FROM posts WHERE id = ?';
-    const deleteResult = await con.promise().query(deletePostQuery, [postId]);
-    console.log(deleteResult);
-    return res.status(204).json({ msg: 'Post deleted successfully' });
+    const postResult = await con.promise().query(deletePostQuery, [postId]);
+
+    return res.status(204).json({
+      commentsResult: 'comments deleted successfully',
+      postResult: 'Post delted successfully',
+    });
   } catch (err) {
     next(err);
   }
