@@ -166,3 +166,24 @@ export const removePost = async (
     next(err);
   }
 };
+
+// 게시물 조회수 증가
+export const countViews = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  const postId = req.params.postId;
+
+  const getRecentViewsQuery = 'SELECT id, views FROM posts WHERE id = ?;';
+  const recentViews = await con.promise().query(getRecentViewsQuery, [postId]);
+  let views = (recentViews[0] as any)[0]?.views;
+  views += 1;
+
+  const incViewsQuery = 'UPDATE posts SET views = ? WHERE id = ?;';
+  const incResult = await con.promise().query(incViewsQuery, [views, postId]);
+
+  const updatedViewsQuery = 'SELECT id, views FROM posts WHERE id = ?;';
+  const [updatedViews] = await con.promise().query(updatedViewsQuery, [postId]);
+  return res.status(201).json(updatedViews);
+};
