@@ -6,6 +6,7 @@ import {
   getPost,
   editPost,
   removePost,
+  countViews,
 } from '../controllers/posts-controller';
 
 const postRouter = express.Router();
@@ -16,5 +17,6 @@ postRouter.post('/write', writePost);
 postRouter.get('/:postId', getPost);
 postRouter.put('/:postId', editPost);
 postRouter.delete('/:postId', removePost);
+postRouter.put('/:postId/views', countViews);
 
 export default postRouter;
