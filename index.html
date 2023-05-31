@@ -19,6 +19,9 @@
     <input type="submit" value="가입">
   </form>
 
+  <button onclick="getPosts()">게시물 조회</button>
+  <div id="postList"></div>
+
   <script>
     function googleLogin() {
       window.location.href = "/api/members/auth/google";
@@ -36,6 +39,23 @@
         })
         .catch(error => {
           console.error('에러 발생:', error);
+        });
+    }
+    function getPosts() {
+      fetch('/api/members/posts')
+        .then(response => response.json())
+        .then(posts => {
+          const postList = document.getElementById('postList');
+          postList.innerHTML = '';
+
+          posts.forEach(post => {
+            const postItem = document.createElement('div');
+            postItem.innerHTML = `<h3>${post.title}</h3><p>${post.description}</p>`;
+            postList.appendChild(postItem);
+          });
+        })
+        .catch(error => {
+          console.error('게시물 조회 에러:', error);
         });
     }
   </script>

@@ -10,12 +10,17 @@ const config = {
   callbackURL: "/auth/google/callback"
 };
 
-passport.serializeUser((user: any, done) => {
-  done(null, user);
-});
+interface User {
+    email: string;
+}
+  
 
-passport.deserializeUser((user: any, done) => {
-  done(null, user);
+passport.serializeUser((user, done) => {
+    done(null, user);
+});
+  
+passport.deserializeUser((user: User, done) => {
+    done(null, user)
 });
 
 passport.use(
@@ -82,10 +87,6 @@ export async function findOrCreateUser({ email }: { email: string }): Promise<an
     } catch (error) {
       console.error('An error occurred in findOrCreateUser:', error);
       throw error;
-    } finally {
-      if (connection) {
-        connection.end();
-      }
     }
 }
 
@@ -104,8 +105,26 @@ export function googleStrategy(req: Request, res: Response, next: NextFunction) 
   
 
 export function googleCallback(req: Request, res: Response, next: NextFunction) {
-  passport.authenticate('google', { failureRedirect: '/' })(req, res, next);
+    passport.authenticate('google', { failureRedirect: '/' })(req, res, (err: Error) => {
+      if (err) {
+        console.error('Google OAuth 인증 실패:', err);
+        return next(err);
+      }
+      
+      // 인증 성공 시 사용자 정보 및 토큰 출력
+      console.log('Google OAuth 인증 성공');
+      console.log('사용자 정보:', (req.user as any));
+      console.log('토큰:', (req.user as any).token);
+  
+      next();
+    });
 }
+  
+  
+  
+  
+  
+  
 
 export function googleCallbackRedirect(req: Request, res: Response) {
     if (req.user) {
@@ -129,3 +148,53 @@ export function logout(req: Request, res: Response) {
       res.redirect('/'); // 로그아웃 후 리다이렉트할 경로
     });
 }
+
+
+export async function getMemberPosts(email: string): Promise<any[]> {
+    try {
+      const [rows] = await con.promise().query<RowDataPacket[]>(`
+        SELECT
+          posts.id,
+          posts.category,
+          posts.title,
+          posts.images,
+          posts.description,
+          posts.created_at,
+          posts.views,
+          members.email,
+          members.name,
+          members.generation,
+          members.isAdmin
+        FROM posts
+        LEFT JOIN members ON posts.author_email = members.email
+        WHERE author_email = ?
+        ORDER BY created_at DESC
+      `, [email]);
+  
+      const posts = rows.map((row: RowDataPacket) => ({
+        id: row.id,
+        category: row.category,
+        title: row.title,
+        images: row.images,
+        description: row.description,
+        created_at: row.created_at,
+        views: row.views,
+        email: row.email,
+        name: row.name,
+        generation: row.generation,
+        isAdmin: row.isAdmin
+      }));
+      console.log(posts)
+      return posts;
+      
+    } catch (error) {
+      console.error('An error occurred in getMemberPosts:', error);
+      throw error;
+    }
+  }
+  
+  
+  
+  
+  
+
