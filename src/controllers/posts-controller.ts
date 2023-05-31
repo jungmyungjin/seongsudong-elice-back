@@ -3,18 +3,51 @@ import { RowDataPacket } from 'mysql2/promise';
 
 import con from '../../connection';
 
-// 전체 게시물 조회
+// 게시물 조회
 export const getPostList = async (
   req: Request,
   res: Response,
   next: NextFunction,
 ) => {
-  try {
-    const getPostsQuery = `SELECT * FROM posts ORDER BY created_at DESC;`;
-    const getResult = await con.promise().query(getPostsQuery);
-    return res.status(200).json(getResult[0]);
-  } catch (err) {
-    next(err);
+  if (req.query.category === '공지게시판') {
+    try {
+      const category = req.query.category;
+      const getNoticesQuery =
+        'SELECT * FROM posts WHERE category = ? ORDER BY created_at DESC';
+      const getResult = await con.promise().query(getNoticesQuery, [category]);
+      return res.status(200).json(getResult[0]);
+    } catch (err) {
+      next(err);
+    }
+  } else if (req.query.category === '자유게시판') {
+    try {
+      const category = req.query.category;
+      const getPostsQuery =
+        'SELECT * FROM posts WHERE category = ? ORDER BY created_at DESC';
+      const getResult = await con.promise().query(getPostsQuery, [category]);
+      return res.status(200).json(getResult[0]);
+    } catch (err) {
+      next(err);
+    }
+  } else if (req.query.email) {
+    try {
+      const email = req.query.email;
+      console.log(email);
+      const getMemberPostsQuery =
+        'SELECT * FROM posts WHERE author_email = ? ORDER BY created_at DESC';
+      const getResult = await con.promise().query(getMemberPostsQuery, [email]);
+      return res.status(200).json(getResult[0]);
+    } catch (err) {
+      next(err);
+    }
+  } else {
+    try {
+      const getAllPostsQuery = `SELECT * FROM posts ORDER BY created_at DESC;`;
+      const getResult = await con.promise().query(getAllPostsQuery);
+      return res.status(200).json(getResult[0]);
+    } catch (err) {
+      next(err);
+    }
   }
 };
 
