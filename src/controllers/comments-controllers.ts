@@ -1,7 +1,7 @@
 // const Lecture = require('../models/Lecture');
 
 import { Request, Response, NextFunction } from 'express';
-import { MysqlError } from 'mysql';
+import { RowDataPacket } from 'mysql2/promise';
 
 import con from '../../connection';
 
@@ -36,8 +36,6 @@ export const createComment = async (
   const email = req.body.email;
   const comment = req.body.comment;
 
-  console.log(postId, email, comment);
-
   // 로그인 확인
   if (!email) {
     return res.status(500).send('로그인 유저가 아닙니다.');
@@ -57,14 +55,10 @@ export const createComment = async (
   const searchUserQuery = `SELECT * FROM members WHERE email = (?)`;
 
   try {
-    con.query(searchUserQuery, email, (err, _) => {
-      if (err) {
-        res.status(500).send('등록된 회원이 아닙니다.');
-
-        throw err;
-      }
-    });
+    await con.promise().query(searchUserQuery, email);
   } catch (err) {
+    res.status(500).send('등록된 회원이 아닙니다.');
+
     throw new Error(`Error searching member: ${err}`);
   }
 
@@ -72,33 +66,43 @@ export const createComment = async (
   const searchPostQuery = `SELECT * FROM posts WHERE id = ${postId}`;
 
   try {
-    con.query(searchPostQuery, (err, _) => {
-      if (err) {
-        res.status(500).send('존재하지 않는 게시물입니다.');
-
-        throw err;
-      }
-    });
+    await con.promise().query(searchPostQuery);
   } catch (err) {
+    res.status(500).send('존재하지 않는 게시물입니다.');
+
     throw new Error(`Error searching post: ${err}`);
   }
+
+  let createdCommentId = null;
 
   // 댓글 등록
   const createCommentQuery =
     'INSERT INTO comments (post_id, content, author_email) VALUES (?, ?, ?)';
 
   try {
-    con.query(createCommentQuery, [postId, comment, email], (err, result) => {
-      if (err) {
-        res.status(500).send('댓글 등록 중 에러가 발생했습니다.');
+    const [result] = await con
+      .promise()
+      .query(createCommentQuery, [postId, comment, email]);
 
-        throw err;
-      }
-
-      console.log(result);
-      res.status(201).json(result);
-    });
+    createdCommentId = (result as RowDataPacket).insertId;
   } catch (err) {
+    res.status(500).send('댓글 등록 중 에러가 발생했습니다.');
+
     throw new Error(`Error creating comment: ${err}`);
+  }
+
+  // 등록 데이터 반환
+  const searchCreatedCommentQuery = `SELECT * FROM comments WHERE id = ${createdCommentId}`;
+
+  try {
+    const [result] = (await con
+      .promise()
+      .query(searchCreatedCommentQuery)) as RowDataPacket[];
+
+    res.status(201).json(result[0]);
+  } catch (err) {
+    res.status(500).send('등록된 댓글 반환 중 에러가 발생했습니다.');
+
+    throw new Error(`Error searching comment: ${err}`);
   }
 };

@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Google Login</title>
+</head>
+<body>
+  <h1>Google Login</h1>
+  <button onclick="googleLogin()">Google Login</button>
+
+  <h2>회원가입</h2>
+  <form action="/register" method="POST">
+    <label for="name">이름:</label>
+    <input type="text" id="name" name="name" required>
+
+    <label for="generation">기수:</label>
+    <input type="text" id="generation" name="generation" required>
+
+    <input type="submit" value="가입">
+  </form>
+
+  <script>
+    function googleLogin() {
+      window.location.href = "/auth/google";
+    }
+  </script>
+</body>
+</html>
