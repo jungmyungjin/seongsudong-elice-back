@@ -48,3 +48,4 @@ app.get('/auth/google', googleStrategy);
 app.get('/auth/google/callback', googleCallback, googleCallbackRedirect);
 app.use('/api/members', memberRouter);
 app.use('/api/comments', commentRouter);
+app.use('/api/posts', postRouter);
