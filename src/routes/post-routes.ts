@@ -1,6 +1,7 @@
 import express from 'express';
 import {
   getPostList,
+  getRecentPosts,
   writePost,
   getPost,
   editPost,
@@ -10,6 +11,7 @@ import {
 const postRouter = express.Router();
 
 postRouter.get('/', getPostList);
+postRouter.get('/recent', getRecentPosts);
 postRouter.post('/write', writePost);
 postRouter.get('/:postId', getPost);
 postRouter.put('/:postId', editPost);

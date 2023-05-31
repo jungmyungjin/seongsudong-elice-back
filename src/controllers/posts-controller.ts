@@ -2,6 +2,8 @@ import { Request, Response, NextFunction } from 'express';
 import { RowDataPacket } from 'mysql2/promise';
 
 import con from '../../connection';
+import { request } from 'http';
+import { error } from 'console';
 
 // 게시물 조회
 export const getPostList = async (
@@ -48,6 +50,27 @@ export const getPostList = async (
     } catch (err) {
       next(err);
     }
+  }
+};
+
+// 최근 게시물 조회
+export const getRecentPosts = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    if (req.query.category === '공지게시판') {
+      const category = req.query.category;
+      const getRecentPostsQuery =
+        'SELECT id, category, title, images, description, created_at, views, email, name, generation, isAdmin FROM posts LEFT JOIN members ON posts.author_email = members.email WHERE category = ? ORDER BY created_at DESC LIMIT 0, 3;';
+      const getResult = await con
+        .promise()
+        .query(getRecentPostsQuery, [category]);
+      return res.status(200).json(getResult[0]);
+    }
+  } catch (err) {
+    next(err);
   }
 };
 
