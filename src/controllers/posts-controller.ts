@@ -74,6 +74,25 @@ export const getRecentPosts = async (
   }
 };
 
+// 인기 게시물 조회
+export const getTopPosts = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  if (req.query.category === '자유게시판') {
+    try {
+      const category = req.query.category;
+      const getTopPostsQuery =
+        'SELECT id, category, title, images, description, created_at, views, email, name, generation, isAdmin FROM posts LEFT JOIN members ON posts.author_email = members.email WHERE category = ? ORDER BY views DESC LIMIT 0, 3;';
+      const topPosts = await con.promise().query(getTopPostsQuery, [category]);
+      return res.status(200).json(topPosts[0]);
+    } catch (err) {
+      next(err);
+    }
+  }
+};
+
 // 게시물 생성
 export const writePost = async (
   req: Request,
