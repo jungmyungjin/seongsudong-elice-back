@@ -9,7 +9,7 @@ import memberRouter from './src/routes/member-routes';
 import session from 'express-session';
 import passport from 'passport';
 
-import {findOrCreateUser, googleCallback, googleCallbackRedirect, googleStrategy} from './src/controllers/members-controllers';
+import { googleCallback, googleCallbackRedirect, googleStrategy } from './src/controllers/members-controllers';
 
 
 const app = express();
