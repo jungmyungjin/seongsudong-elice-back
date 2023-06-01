@@ -11,12 +11,8 @@ import session from 'express-session';
 import passport from 'passport';
 import cors from 'cors';
 
-import {
-  findOrCreateUser,
-  googleCallback,
-  googleCallbackRedirect,
-  googleStrategy,
-} from './src/controllers/members-controllers';
+import { googleCallback, googleCallbackRedirect, googleStrategy } from './src/controllers/members-controllers';
+
 
 const app = express();
 app.use(express.json());
