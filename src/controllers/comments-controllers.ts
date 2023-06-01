@@ -212,10 +212,13 @@ export const deleteCommentAdmin = async (
   const commentId = req.body.commentId;
   const isAdmin = req.body.isAdmin;
 
+  // 관리자 요청인지 확인 req.body.isAdmin 정보 확인
+  if (!isAdmin) {
+    return res.status(500).json({ message: '관리자가 아닙니다.' });
+  }
+
   // req에 필요한 데이터가 전부 들어왔는지 확인
-  // 문제 발생! isAmdin이 number 타입인데 0으로 들어오는 경우 !0 === true가 되어버려서
-  // 정보가 전달되었음에도 정보가 부족하다는 에러를 뱉음....!
-  if (!commentId || !email || !isAdmin) {
+  if (!commentId || !email) {
     return res
       .status(500)
       .json({ message: '입력 정보가 부족합니다. 다시 한번 확인해주세요.' });
@@ -224,11 +227,6 @@ export const deleteCommentAdmin = async (
   // 로그인 확인
   if (!email) {
     return res.status(500).json({ message: '로그인 유저가 아닙니다.' });
-  }
-
-  // 관리자 요청인지 확인
-  if (!isAdmin) {
-    return res.status(500).json({ message: '관리자가 아닙니다.' });
   }
 
   // 존재하는 유저인지 확인
