@@ -5,12 +5,18 @@ import express, { Request, Response, NextFunction } from 'express';
 
 import commentRouter from './src/routes/comment-routes';
 import memberRouter from './src/routes/member-routes';
+import postRouter from './src/routes/post-routes';
 
 import session from 'express-session';
 import passport from 'passport';
+import cors from 'cors';
 
-import {findOrCreateUser, googleCallback, googleCallbackRedirect, googleStrategy} from './src/controllers/members-controllers';
-
+import {
+  findOrCreateUser,
+  googleCallback,
+  googleCallbackRedirect,
+  googleStrategy,
+} from './src/controllers/members-controllers';
 
 const app = express();
 app.use(express.json());
@@ -26,23 +32,31 @@ const sessionConfig = {
   },
 };
 
+// cors
+app.use(
+  cors({
+    origin: true,
+    methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    credentials: true,
+    maxAge: 86400,
+    optionsSuccessStatus: 200,
+  }),
+);
+
 // Express 애플리케이션에 세션 미들웨어 추가
 app.use(session(sessionConfig));
 
 app.use(passport.initialize());
 app.use(passport.session());
 
-
-
 app.get('/', (req: Request, res: Response, next: NextFunction) => {
   res.sendFile(__dirname + '/index.html');
 });
 
-
 app.listen(3000, () => {
   console.log('server on!');
 });
-
 
 app.get('/auth/google', googleStrategy);
 app.get('/auth/google/callback', googleCallback, googleCallbackRedirect);
