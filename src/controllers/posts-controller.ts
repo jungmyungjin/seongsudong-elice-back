@@ -11,35 +11,35 @@ export const getPostList = async (
   next: NextFunction,
 ) => {
   try {
-    if (req.query.category === '공지게시판') {
-      const category = req.query.category;
-      const getNoticesQuery =
-        'SELECT id, category, title, images, description, created_at, views, email, name, generation, isAdmin FROM posts LEFT JOIN members ON posts.author_email = members.email WHERE category = ? ORDER BY created_at DESC';
-      const getResult = await con.promise().query(getNoticesQuery, [category]);
-      return res.status(200).json(getResult[0]);
-    } else if (req.query.category === '자유게시판') {
-      const category = req.query.category;
-      const getPostsQuery =
-        'SELECT id, category, title, images, description, created_at, views, email, name, generation, isAdmin FROM posts LEFT JOIN members ON posts.author_email = members.email WHERE category = ?';
-      const getResult = await con.promise().query(getPostsQuery, [category]);
+    if (req.query.category) {
+      const query = req.query.category;
+      // 카테고리별 게시물 조회
+      if (query === '공지게시판') {
+        const category = req.query.category;
+        const getNoticesQuery =
+          'SELECT id, category, title, images, description, created_at, views, email, name, generation, isAdmin FROM posts LEFT JOIN members ON posts.author_email = members.email WHERE category = ? ORDER BY created_at DESC';
+        const getResult = await con
+          .promise()
+          .query(getNoticesQuery, [category]);
+        console.log(getResult[0]);
+        return res.status(200).json(getResult[0]);
+      } else if (query === '자유게시판') {
+        const category = req.query.category;
+        const getPostsQuery =
+          'SELECT id, category, title, images, description, created_at, views, email, name, generation, isAdmin FROM posts LEFT JOIN members ON posts.author_email = members.email WHERE category = ? ORDER BY created_at DESC';
+        const getResult = await con.promise().query(getPostsQuery, [category]);
+        return res.status(200).json(getResult[0]);
+      }
+    } else if (req.query.email) {
+      // 사용자 작성 게시물 조회
+      const email = req.query.email;
+      const getMemberPostsQuery =
+        'SELECT id, category, title, images, description, created_at, views, email, name, generation, isAdmin FROM posts LEFT JOIN members ON posts.author_email = members.email WHERE author_email = ? ORDER BY created_at DESC';
+      const getResult = await con.promise().query(getMemberPostsQuery, [email]);
       return res.status(200).json(getResult[0]);
     } else {
-      return res.status(400).json({ error: 'Invalid category' });
+      return res.status(400).json({ error: 'Invalid query' });
     }
-
-    // 이메일로 게시물 데이터 조회
-    // if (req.query.email) {
-    //   const email = req.query.email;
-    //   console.log(email);
-    //   const getMemberPostsQuery =
-    //     'SELECT id, category, title, images, description, created_at, views, email, name, generation, isAdmin FROM posts LEFT JOIN members ON posts.author_email = members.email WHERE author_email = ? ORDER BY created_at DESC';
-    //   const getResult = await con.promise().query(getMemberPostsQuery, [email]);
-    //   return res.status(200).json(getResult[0]);
-    // } else {
-    //   const getAllPostsQuery = `SELECT * FROM posts ORDER BY created_at DESC;`;
-    //   const getResult = await con.promise().query(getAllPostsQuery);
-    //   return res.status(200).json(getResult[0]);
-    // }
   } catch (err) {
     console.error(err);
     return res.status(500).json({ error: 'Internal server error' });
