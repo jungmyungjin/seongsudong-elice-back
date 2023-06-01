@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import { RowDataPacket } from 'mysql2/promise';
 
 import con from '../../connection';
+import { error } from 'console';
 
 // 게시물 조회
 export const getPostList = async (
@@ -9,45 +10,39 @@ export const getPostList = async (
   res: Response,
   next: NextFunction,
 ) => {
-  if (req.query.category === '공지게시판') {
-    try {
+  try {
+    if (req.query.category === '공지게시판') {
       const category = req.query.category;
       const getNoticesQuery =
         'SELECT id, category, title, images, description, created_at, views, email, name, generation, isAdmin FROM posts LEFT JOIN members ON posts.author_email = members.email WHERE category = ? ORDER BY created_at DESC';
       const getResult = await con.promise().query(getNoticesQuery, [category]);
       return res.status(200).json(getResult[0]);
-    } catch (err) {
-      next(err);
-    }
-  } else if (req.query.category === '자유게시판') {
-    try {
+    } else if (req.query.category === '자유게시판') {
       const category = req.query.category;
       const getPostsQuery =
         'SELECT id, category, title, images, description, created_at, views, email, name, generation, isAdmin FROM posts LEFT JOIN members ON posts.author_email = members.email WHERE category = ?';
       const getResult = await con.promise().query(getPostsQuery, [category]);
       return res.status(200).json(getResult[0]);
-    } catch (err) {
-      next(err);
+    } else {
+      return res.status(400).json({ error: 'Invalid category' });
     }
-  } else if (req.query.email) {
-    try {
-      const email = req.query.email;
-      console.log(email);
-      const getMemberPostsQuery =
-        'SELECT id, category, title, images, description, created_at, views, email, name, generation, isAdmin FROM posts LEFT JOIN members ON posts.author_email = members.email WHERE author_email = ? ORDER BY created_at DESC';
-      const getResult = await con.promise().query(getMemberPostsQuery, [email]);
-      return res.status(200).json(getResult[0]);
-    } catch (err) {
-      next(err);
-    }
-  } else {
-    try {
-      const getAllPostsQuery = `SELECT * FROM posts ORDER BY created_at DESC;`;
-      const getResult = await con.promise().query(getAllPostsQuery);
-      return res.status(200).json(getResult[0]);
-    } catch (err) {
-      next(err);
-    }
+
+    // 이메일로 게시물 데이터 조회
+    // if (req.query.email) {
+    //   const email = req.query.email;
+    //   console.log(email);
+    //   const getMemberPostsQuery =
+    //     'SELECT id, category, title, images, description, created_at, views, email, name, generation, isAdmin FROM posts LEFT JOIN members ON posts.author_email = members.email WHERE author_email = ? ORDER BY created_at DESC';
+    //   const getResult = await con.promise().query(getMemberPostsQuery, [email]);
+    //   return res.status(200).json(getResult[0]);
+    // } else {
+    //   const getAllPostsQuery = `SELECT * FROM posts ORDER BY created_at DESC;`;
+    //   const getResult = await con.promise().query(getAllPostsQuery);
+    //   return res.status(200).json(getResult[0]);
+    // }
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ error: 'Internal server error' });
   }
 };
 
@@ -66,9 +61,12 @@ export const getRecentPosts = async (
         .promise()
         .query(getRecentPostsQuery, [category]);
       return res.status(200).json(getResult[0]);
+    } else {
+      return res.status(400).json({ error: 'Invalid category' });
     }
   } catch (err) {
-    next(err);
+    console.error(err);
+    return res.status(500).json({ error: 'Internal server error' });
   }
 };
 
@@ -78,16 +76,19 @@ export const getTopPosts = async (
   res: Response,
   next: NextFunction,
 ) => {
-  if (req.query.category === '자유게시판') {
-    try {
+  try {
+    if (req.query.category === '자유게시판') {
       const category = req.query.category;
       const getTopPostsQuery =
         'SELECT id, category, title, images, description, created_at, views, email, name, generation, isAdmin FROM posts LEFT JOIN members ON posts.author_email = members.email WHERE category = ? ORDER BY views DESC LIMIT 0, 3;';
       const topPosts = await con.promise().query(getTopPostsQuery, [category]);
       return res.status(200).json(topPosts[0]);
-    } catch (err) {
-      next(err);
+    } else {
+      return res.status(400).json({ error: 'Invalid category' });
     }
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ error: 'Internal server error' });
   }
 };
 
@@ -119,7 +120,8 @@ export const writePost = async (
 
     return res.status(200).json(getResult[0]);
   } catch (err) {
-    next(err);
+    console.error(err);
+    return res.status(500).json({ error: 'Internal server error' });
   }
 };
 
@@ -150,7 +152,8 @@ export const getPost = async (
     };
     return res.status(200).json(resultData);
   } catch (err) {
-    next(err);
+    console.error(err);
+    return res.status(500).json({ error: 'Internal server error' });
   }
 };
 
@@ -176,7 +179,8 @@ export const editPost = async (
 
     return res.status(201).json(updatedPost);
   } catch (err) {
-    next(err);
+    console.error(err);
+    return res.status(500).json({ error: 'Internal server error' });
   }
 };
 
@@ -195,12 +199,10 @@ export const removePost = async (
     const deletePostQuery = 'DELETE FROM posts WHERE id = ?';
     const postResult = await con.promise().query(deletePostQuery, [postId]);
 
-    return res.status(204).json({
-      commentsResult: 'comments deleted successfully',
-      postResult: 'Post delted successfully',
-    });
+    return res.status(204);
   } catch (err) {
-    next(err);
+    console.error(err);
+    return res.status(500).json({ error: 'Internal server error' });
   }
 };
 
@@ -210,17 +212,26 @@ export const countViews = async (
   res: Response,
   next: NextFunction,
 ) => {
-  const postId = req.params.postId;
+  try {
+    const postId = req.params.postId;
 
-  const getRecentViewsQuery = 'SELECT id, views FROM posts WHERE id = ?;';
-  const recentViews = await con.promise().query(getRecentViewsQuery, [postId]);
-  let views = (recentViews[0] as any)[0]?.views;
-  views += 1;
+    const getRecentViewsQuery = 'SELECT id, views FROM posts WHERE id = ?;';
+    const recentViews = await con
+      .promise()
+      .query(getRecentViewsQuery, [postId]);
+    let views = (recentViews[0] as any)[0]?.views;
+    views += 1;
 
-  const incViewsQuery = 'UPDATE posts SET views = ? WHERE id = ?;';
-  const incResult = await con.promise().query(incViewsQuery, [views, postId]);
+    const incViewsQuery = 'UPDATE posts SET views = ? WHERE id = ?;';
+    const incResult = await con.promise().query(incViewsQuery, [views, postId]);
 
-  const updatedViewsQuery = 'SELECT id, views FROM posts WHERE id = ?;';
-  const [updatedViews] = await con.promise().query(updatedViewsQuery, [postId]);
-  return res.status(201).json(updatedViews);
+    const updatedViewsQuery = 'SELECT id, views FROM posts WHERE id = ?;';
+    const [updatedViews] = await con
+      .promise()
+      .query(updatedViewsQuery, [postId]);
+    return res.status(201).json(updatedViews);
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
 };
