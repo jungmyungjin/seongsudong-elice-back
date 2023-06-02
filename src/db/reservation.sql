@@ -2,14 +2,15 @@ CREATE TABLE
     reservations (
         resevation_id VARCHAR(50) PRIMARY KEY NOT NULL DEFAULT '',
         member_generation VARCHAR(50) NOT NULL,
-        member_name VARCHAR(255) NOT NULL,
+        member_name VARCHAR(50) NOT NULL,
         member_email VARCHAR(255) NOT NULL,
         reservation_date DATE NOT NULL,
         start_time TIME NOT NULL,
         end_time TIME NOT NULL,
         num_of_guests INT NOT NULL,
-        seat_number VARCHAR(255) NOT NULL,
-        seat_type VARCHAR(255) NOT NULL,
+        visitors VARCHAR(255) NOT NULL,
+        seat_number VARCHAR(100) NOT NULL,
+        seat_type VARCHAR(10) NOT NULL,
         status ENUM('예약완료', '예약취소') NOT NULL,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (
