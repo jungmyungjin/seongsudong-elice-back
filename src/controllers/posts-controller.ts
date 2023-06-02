@@ -125,7 +125,7 @@ export const writePost = async (
     const imgPaths = Array.isArray(req.files)
       ? req.files.map((file: UploadedFile) => `uploads/${file.filename}`)
       : [];
-    const images = JSON.stringify(imgPaths.join(','));
+    const images = JSON.stringify(imgPaths);
 
     const { author_email: email, category, title, description } = req.body;
 
@@ -189,7 +189,7 @@ export const editPost = async (
     const imgPaths = Array.isArray(req.files)
       ? req.files.map((file: UploadedFile) => `uploads/${file.filename}`)
       : [];
-    const images = JSON.stringify(imgPaths.join(','));
+    const images = JSON.stringify(imgPaths);
 
     const postId = req.params.postId;
     const { title, description } = req.body;
