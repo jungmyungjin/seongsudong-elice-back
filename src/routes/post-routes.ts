@@ -17,9 +17,9 @@ const postRouter = express.Router();
 postRouter.get('/', getPostList);
 postRouter.get('/recent', getRecentPosts);
 postRouter.get('/top', getTopPosts);
-postRouter.post('/write', upload.array('images', 3), writePost);
+postRouter.post('/write', upload.array('file', 3), writePost);
 postRouter.get('/:postId', getPost);
-postRouter.put('/:postId', upload.array('images', 3), editPost);
+postRouter.patch('/:postId', upload.array('file', 3), editPost);
 postRouter.delete('/:postId', removePost);
 postRouter.put('/:postId/views', countViews);
 

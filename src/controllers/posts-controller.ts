@@ -186,13 +186,37 @@ export const editPost = async (
   next: NextFunction,
 ) => {
   try {
-    const imgPaths = Array.isArray(req.files)
-      ? req.files.map((file: UploadedFile) => `uploads/${file.filename}`)
-      : [];
-    const images = JSON.stringify(imgPaths);
+    let imgPaths;
+    let images;
+
+    if (req.files?.length !== 0) {
+      imgPaths =
+        Array.isArray(req.files) &&
+        req.files.map((file: UploadedFile) => `uploads/${file.filename}`);
+
+      images = JSON.stringify(imgPaths);
+    }
 
     const postId = req.params.postId;
     const { title, description } = req.body;
+
+    if (!images) {
+      console.log('run');
+
+      const updatePostQuery = ` UPDATE posts SET title = ?, description = ? WHERE id = ${postId}`;
+      const [updateResult] = await con
+        .promise()
+        .query(updatePostQuery, [title, description]);
+
+      // 수정 데이터 반환
+      const getUpdatedPostQuery = `SELECT id, category, title, images, description, created_at, views, email, name, generation, isAdmin FROM posts LEFT JOIN members ON posts.author_email = members.email WHERE id = ?`;
+      const [updatedPost] = await con
+        .promise()
+        .query(getUpdatedPostQuery, [postId]);
+
+      return res.status(201).json(updatedPost);
+    }
+
     const updatePostQuery = ` UPDATE posts SET title = ?, images = ?, description = ? WHERE id = ${postId}`;
     const [updateResult] = await con
       .promise()

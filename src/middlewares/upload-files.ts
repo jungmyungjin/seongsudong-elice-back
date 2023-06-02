@@ -7,6 +7,10 @@ const storage: StorageEngine = multer.diskStorage({
     cb(null, 'uploads/');
   },
   filename: function (req: Request, file, cb) {
+    file.originalname = Buffer.from(file.originalname, 'latin1').toString(
+      'utf8',
+    );
+
     const ext = path.extname(file.originalname);
     const filename = file.originalname.replace(ext, '');
     cb(null, filename + '-' + Date.now() + ext);
