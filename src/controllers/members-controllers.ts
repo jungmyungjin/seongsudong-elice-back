@@ -10,7 +10,7 @@ const config = {
   callbackURL: "/auth/google/callback"
 };
 
-interface User {
+export interface User {
   email: string | undefined;
   shortId: string;
 }
@@ -97,6 +97,8 @@ export async function createUser(email: string, name: string, generation: string
     throw error;
   }
 }
+
+
 
 //로그아웃
 export function logout(req: Request, res: Response) {

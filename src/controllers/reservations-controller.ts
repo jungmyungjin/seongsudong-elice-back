@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { RowDataPacket } from 'mysql2/promise';
+import passport from '../middlewares/passport'
 
 import con from '../../connection';
 import { v4 as uuidv4 } from 'uuid';
@@ -167,6 +168,50 @@ export const seatCheck = async (req: Request, res: Response): Promise<Response> 
 
 
         return res.status(200).json(seatAvailability);
+    } catch (err) {
+        console.error(err);
+        return res.status(500).json({ error: 'Internal server error' });
+    }
+};
+
+// 내 예약 조회
+export const getMyReservation = async (
+    req: Request,
+    res: Response,
+    next: NextFunction,
+) => {
+    try {
+        // 로그인된 사용자의 이메일 가져오기 *에러*
+        //const userEmail = req.user.email;
+
+        // 현재 날짜 및 시간
+        const currentDate = new Date();
+
+        // 지난 예약 조회
+        const pastReservationsQuery = `
+            SELECT *
+            FROM reservations
+            WHERE member_email = ? AND reservation_date < ?
+        `;
+        const [pastReservationRows] = await con.promise().query<RowDataPacket[]>(pastReservationsQuery, [
+            //userEmail, *에러*
+            currentDate,
+        ]);
+        const pastReservations: RowDataPacket[] = pastReservationRows;
+
+        // 다가오는 예약 조회
+        const upcomingReservationsQuery = `
+            SELECT *
+            FROM reservations
+            WHERE member_email = ? AND reservation_date >= ?
+        `;
+        const [upcomingReservationRows] = await con.promise().query<RowDataPacket[]>(upcomingReservationsQuery, [
+            //userEmail, *에러*
+            currentDate,
+        ]);
+        const upcomingReservations: RowDataPacket[] = upcomingReservationRows;
+
+        return res.status(200).json({ pastReservations, upcomingReservations });
     } catch (err) {
         console.error(err);
         return res.status(500).json({ error: 'Internal server error' });
