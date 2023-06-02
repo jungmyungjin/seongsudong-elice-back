@@ -4,6 +4,29 @@ import { RowDataPacket } from 'mysql2/promise';
 import con from '../../connection';
 import { error } from 'console';
 
+// UploadedFile 타입 설정
+interface UploadedFile {
+  fieldname: string;
+  originalname: string;
+  encoding: string;
+  mimetype: string;
+  destination: string;
+  filename: string;
+  path: string;
+  size: number;
+}
+
+declare global {
+  namespace Express {
+    interface Multer {
+      single(fieldname: string): any;
+      array(fieldname: string, maxCount?: number): any;
+      fields(fields: Array<{ name: string }>): any;
+      any(): any;
+    }
+  }
+}
+
 // 게시물 조회
 export const getPostList = async (
   req: Request,
@@ -99,13 +122,12 @@ export const writePost = async (
   next: NextFunction,
 ) => {
   try {
-    const {
-      author_email: email,
-      category,
-      title,
-      images,
-      description,
-    } = req.body;
+    const imgPaths = Array.isArray(req.files)
+      ? req.files.map((file: UploadedFile) => `uploads/${file.filename}`)
+      : [];
+    const images = JSON.stringify(imgPaths.join(','));
+
+    const { author_email: email, category, title, description } = req.body;
 
     const createPostQuery = `INSERT INTO posts (author_email, category, title, images, description)
       VALUES (?, ?, ?, ?, ?)`;
@@ -164,8 +186,13 @@ export const editPost = async (
   next: NextFunction,
 ) => {
   try {
+    const imgPaths = Array.isArray(req.files)
+      ? req.files.map((file: UploadedFile) => `uploads/${file.filename}`)
+      : [];
+    const images = JSON.stringify(imgPaths.join(','));
+
     const postId = req.params.postId;
-    const { title, images, description } = req.body;
+    const { title, description } = req.body;
     const updatePostQuery = ` UPDATE posts SET title = ?, images = ?, description = ? WHERE id = ${postId}`;
     const [updateResult] = await con
       .promise()
