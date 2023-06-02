@@ -11,8 +11,11 @@ import session from 'express-session';
 import passport from 'passport';
 import cors from 'cors';
 
-import { googleCallback, googleCallbackRedirect, googleStrategy } from './src/controllers/members-controllers';
-
+import {
+  googleCallback,
+  googleCallbackRedirect,
+  googleStrategy,
+} from './src/controllers/members-controllers';
 
 const app = express();
 app.use(express.json());
@@ -49,6 +52,8 @@ app.use(passport.session());
 app.get('/', (req: Request, res: Response, next: NextFunction) => {
   res.sendFile(__dirname + '/index.html');
 });
+
+app.use('/uploads', express.static('uploads'));
 
 app.listen(3000, () => {
   console.log('server on!');
