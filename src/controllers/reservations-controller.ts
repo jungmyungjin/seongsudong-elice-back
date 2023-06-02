@@ -103,3 +103,72 @@ export const createReservation = async (
         return res.status(500).json({ error: 'Internal server error' });
     }
 };
+
+// 좌석조회
+export const seatCheck = async (req: Request, res: Response): Promise<Response> => {
+    try {
+        const { reservation_date } = req.query;
+        console.log(reservation_date)
+
+        // 예약 조회
+        const getReservationsQuery = `
+            SELECT *
+            FROM reservations
+            WHERE reservation_date = ?
+        `;
+        const [reservationRows] = await con.promise().query<RowDataPacket[]>(getReservationsQuery, [
+            reservation_date,
+        ]);
+        const reservations: RowDataPacket[] = reservationRows;
+
+        // 모든 좌석 정보 조회
+        const getSeatsQuery = `
+            SELECT seat_number, seat_type
+            FROM seats
+        `;
+        const [seatRows] = await con.promise().query<RowDataPacket[]>(getSeatsQuery);
+        const seats: RowDataPacket[] = seatRows;
+
+        // 시간대별 예약 가능 여부 초기화
+        const seatAvailability: { [seatNumber: string]: any } = {};
+
+        // 시간대별로 예약 가능 여부와 좌석 번호를 저장하기 위해 좌석 정보를 초기화
+        seats.forEach((seat: RowDataPacket) => {
+            const seatNumber = seat.seat_number;
+            seatAvailability[seatNumber] = {
+                seat_type: seat.seat_type,
+                available10to14: true,
+                available14to18: true,
+                available18to22: true
+            };
+        });
+
+        // 예약된 좌석 확인
+        console.log('예약좌석확인', reservations)
+        reservations.forEach((reservation: RowDataPacket) => {
+            const startTime = reservation.start_time;
+            const endTime = reservation.end_time;
+            const seatNumber = reservation.seat_number;
+            console.log('시작시간: ', startTime, '종료시간: ', endTime)
+
+            if (startTime <= '10:00:00' && endTime >= '14:00:00') {
+                seatAvailability[seatNumber].available10to14 = false;
+            }
+
+            if (startTime <= '14:00:00' && endTime >= '18:00:00') {
+                seatAvailability[seatNumber].available14to18 = false;
+            }
+
+            if (startTime <= '18:00:00' && endTime >= '22:00:00') {
+                seatAvailability[seatNumber].available18to22 = false;
+            }
+        });
+
+
+
+        return res.status(200).json(seatAvailability);
+    } catch (err) {
+        console.error(err);
+        return res.status(500).json({ error: 'Internal server error' });
+    }
+};
