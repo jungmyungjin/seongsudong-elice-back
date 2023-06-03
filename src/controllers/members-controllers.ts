@@ -4,11 +4,6 @@ import { Strategy as GoogleStrategy, Profile } from 'passport-google-oauth20';
 import { RowDataPacket } from 'mysql2/promise';
 import con from '../../connection';
 
-const config = {
-  clientID: "176418337321-nlsk84qeitsk1d5r4ssl2indih8sea5t.apps.googleusercontent.com",
-  clientSecret: "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",
-  callbackURL: "/auth/google/callback"
-};
 
 export interface User {
   email: string | undefined;
@@ -17,8 +12,13 @@ export interface User {
 
 passport.use(
   new GoogleStrategy(
-    config,
-    async (accessToken, refreshToken, profile, done) => {
+    {
+      clientID: process.env.CLIENT_ID!,
+      clientSecret: process.env.CLIENT_SECRET!,
+      callbackURL: process.env.CALLBACK_URL!,
+      passReqToCallback: true,
+    },
+    async (req, accessToken, refreshToken, profile, done) => {
       const { email } = profile._json;
       const processedEmail = email ? email : '';
 
@@ -34,7 +34,6 @@ passport.use(
     }
   )
 );
-
 
 passport.serializeUser((user, done) => {
   done(null, user);
@@ -75,7 +74,6 @@ export async function createUser(email: string, name: string, generation: string
     connection = await con;
 
     const createdAt = new Date().toISOString().slice(0, 19).replace('T', ' ');
-
     const [insertResult] = await connection.promise().query<any>(
       'INSERT INTO members (email, name, generation, isAdmin, createdAt) VALUES (?, ?, ?, ?, ?)',
       [email, name, generation, isAdmin, createdAt]

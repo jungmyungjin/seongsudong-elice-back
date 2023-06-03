@@ -76,23 +76,23 @@ export const createReservation = async (
         ]);
 
         const getReservationQuery = `
-      SELECT
-      reservation_id,
-        member_generation,
-        member_name,
-        member_email,
-        reservation_date,
-        start_time,
-        end_time,
-        num_of_guests,
-        visitors,
-        seat_number,
-        seat_type,
-        status,
-        created_at
-      FROM reservations
-      WHERE reservation_id = ?
-    `;
+        SELECT
+            reservation_id,
+            member_generation,
+            member_name,
+            member_email,
+            reservation_date,
+            start_time,
+            end_time,
+            num_of_guests,
+            visitors,
+            seat_number,
+            seat_type,
+            status,
+            created_at
+        FROM reservations
+        WHERE reservation_id = ?
+        `;
         const [reservationRows] = await con.promise().query(getReservationQuery, [
             reservation_id,
         ]);
