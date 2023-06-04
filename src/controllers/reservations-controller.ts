@@ -164,8 +164,16 @@ export const createReservation = async (
         ];
 
         await con.promise().query(createReservationQuery, createReservationParams);
+        // 예약 정보 조회
+        const getReservationQuery = `
+            SELECT *
+            FROM reservations
+            WHERE reservation_id = ?
+        `;
+        const [reservationRows] = await con.promise().query<RowDataPacket[]>(getReservationQuery, [reservation_id]);
+        const reservation: RowDataPacket | undefined = (reservationRows as RowDataPacket[])[0];
 
-        return res.status(200).json({ message: '예약이 완료되었습니다.' });
+        return res.status(201).json({ message: '예약이 완료되었습니다.', reservation: reservation });
     } catch (err) {
         console.error(err);
         return Promise.reject(err);
