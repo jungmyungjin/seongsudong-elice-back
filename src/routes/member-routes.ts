@@ -1,6 +1,6 @@
 import express, { Request, Response, NextFunction } from 'express';
 import { getMemberPosts, checkExistingUser, createUser, googleCallback, googleCallbackRedirect, googleStrategy, logout } from '../controllers/members-controllers';
-import { isAdmin, AuthenticatedRequest } from '../middlewares/isAdmin'
+import { isAdmin } from '../middlewares/isAdmin'
 import passport from 'passport';
 
 const router = express.Router();

@@ -2,14 +2,12 @@ import { Request, Response, NextFunction } from 'express';
 import passport from 'passport';
 import { User } from '../controllers/members-controllers'
 
-export interface AuthenticatedRequest extends Request {
-    user?: User;
-}
 
-export const isAdmin = (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+export const isAdmin = (req: Request, res: Response, next: NextFunction) => {
     // 로그인된 사용자의 정보 가져오기
-    const isAdmin = req.user?.isAdmin;
-    console.log('isAdmin : ', isAdmin)
+    const user = req.user as User;
+    const isAdmin = user?.isAdmin;
+    console.log('isAdmin:', isAdmin);
 
     // isAdmin 여부 확인
     if (isAdmin) {
