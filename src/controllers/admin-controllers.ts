@@ -34,7 +34,7 @@ export const cancelReservationByAdmin = async (req: Request, res: Response, next
         const { reservationId } = req.params;
 
         // 예약 조회 전에 미들웨어 사용 - isAdmin
-        //isAdmin(req, res, async () => {
+        //isAdmin(req, res, async () => { *프론트연결 후 미들웨어 실행
         // 예약 정보 조회
         const getReservationQuery = `
                 SELECT *
@@ -48,14 +48,6 @@ export const cancelReservationByAdmin = async (req: Request, res: Response, next
             return res.status(404).json({ error: '예약을 찾을 수 없습니다.' });
         }
 
-        // 현재 날짜와 예약된 날짜 비교
-        const currentDate = new Date();
-        const reservationDate = new Date(reservation.reservation_date);
-
-        if (reservationDate < currentDate) {
-            return res.status(403).json({ error: '지난 예약은 취소할 수 없습니다.' });
-        }
-
         // 예약 취소
         const cancelReservationQuery = `
                 DELETE FROM reservations
@@ -65,7 +57,7 @@ export const cancelReservationByAdmin = async (req: Request, res: Response, next
         await con.promise().query(cancelReservationQuery, [reservationId]);
 
         return res.status(200).json({ message: '예약이 성공적으로 취소되었습니다.' });
-        //});
+        //}); *프론트 연결 후 미들웨어 실행
     } catch (err) {
         console.error(err);
         return res.status(500).json({ error: '내부 서버 오류' });
