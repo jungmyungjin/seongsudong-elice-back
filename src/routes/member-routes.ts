@@ -13,17 +13,6 @@ router.get('/auth/google', googleStrategy);
 router.get('/auth/google/callback', googleCallback, googleCallbackRedirect);
 router.post('/logout', logout);
 
-
-// router.post('/register', async (req: Request, res: Response, next: NextFunction) => {
-//   try {
-//     const { email } = req.body;
-//     const user = await findOrCreateUser({ email });
-//     res.json(user);
-//   } catch (error) {
-//     next(error);
-//   }
-// });
-
 //기존유저인지조회
 router.get('/existuser-check', async (req: Request, res: Response) => {
   const { email } = req.query;
@@ -69,6 +58,14 @@ router.get('/admin', isAdmin as any, (req, res) => {
 });
 
 
-
+// router.post('/register', async (req: Request, res: Response, next: NextFunction) => {
+//   try {
+//     const { email } = req.body;
+//     const user = await findOrCreateUser({ email });
+//     res.json(user);
+//   } catch (error) {
+//     next(error);
+//   }
+// });
 
 export default router;
