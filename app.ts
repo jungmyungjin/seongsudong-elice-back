@@ -7,10 +7,13 @@ import commentRouter from './src/routes/comment-routes';
 import memberRouter from './src/routes/member-routes';
 import postRouter from './src/routes/post-routes';
 import reservationRouter from './src/routes/reservaton-routes';
+import chatRouter from './src/routes/chat-routes';
 
 import session from 'express-session';
 import passport from 'passport';
 import cors from 'cors';
+import http from 'http';
+import { Server } from 'socket.io';
 
 import {
   googleCallback,
@@ -19,7 +22,19 @@ import {
 } from './src/controllers/members-controllers';
 
 const app = express();
-app.use(express.json());
+
+const server = http.createServer(app);
+
+// socket.io 서버 생성 및 옵션 설정
+export const io = new Server(server);
+// const io = new Server(server, {
+//   cors: {
+//     origin: allowedOrigins,
+//     methods: ['GET', 'POST'],
+//     allowedHeaders: ['Content-Type', 'Authorization'],
+//     credentials: true,
+//   },
+// });
 
 // 세션 설정
 const sessionConfig = {
@@ -31,6 +46,8 @@ const sessionConfig = {
     maxAge: 1000 * 60 * 60, // 세션 유효 기간 (예: 1시간)
   },
 };
+
+app.use(express.json());
 
 // cors
 app.use(
@@ -56,13 +73,30 @@ app.get('/', (req: Request, res: Response, next: NextFunction) => {
 
 app.use('/uploads', express.static('uploads'));
 
-app.listen(3000, () => {
-  console.log('server on!');
-});
-
 app.get('/auth/google', googleStrategy);
 app.get('/auth/google/callback', googleCallback, googleCallbackRedirect);
+
 app.use('/api/members', memberRouter);
 app.use('/api/comments', commentRouter);
 app.use('/api/posts', postRouter);
 app.use('/api/reservations', reservationRouter);
+app.use('/api/chat', chatRouter);
+
+app.listen(3000, () => {
+  console.log('server on!');
+});
+
+// socket.io 서버
+server.listen(3001, () => {
+  console.log(`Socket server on 3001 !!`);
+});
+
+// socket.io 연결
+io.on('connection', socket => {
+  // 연결 됐을 때
+  console.log('a user connected');
+  // 연결 끊어졌을 때
+  socket.on('disconnect', () => {
+    console.log('user disconnected');
+  });
+});
