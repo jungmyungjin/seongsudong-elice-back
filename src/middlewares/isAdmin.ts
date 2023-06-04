@@ -20,3 +20,4 @@ export const isAdmin = (req: AuthenticatedRequest, res: Response, next: NextFunc
         return res.status(403).json({ error: '권한이 없습니다.' });
     }
 };
+

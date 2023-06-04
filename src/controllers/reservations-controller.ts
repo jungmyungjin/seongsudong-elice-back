@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { RowDataPacket } from 'mysql2/promise';
 import con from '../../connection';
+import { isAdmin, AuthenticatedRequest } from '../middlewares/isAdmin';
 import { v4 as uuidv4 } from 'uuid';
 
 // 좌석조회
@@ -66,7 +67,7 @@ export const seatCheck = async (req: Request, res: Response): Promise<{ [seatNum
         return res.status(200).json(seatAvailability);
     } catch (err) {
         console.error(err);
-        return res.status(500).json({ error: 'Internal server error' });
+        return Promise.reject(err);
     }
 };
 
@@ -165,13 +166,116 @@ export const createReservation = async (
         await con.promise().query(createReservationQuery, createReservationParams);
 
         return res.status(200).json({ message: '예약이 완료되었습니다.' });
-    } catch (error) {
-        console.error(error);
-        return res.status(500).json({ error: 'Internal server error' });
+    } catch (err) {
+        console.error(err);
+        return Promise.reject(err);
     }
 };
 
-// 내 예약 조회
+// 예약 취소(일반사용자)
+export const cancelReservation = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+) => {
+    try {
+        const { reservationId, email } = req.body;
+        console.log(reservationId)
+        // 예약 정보 조회
+        const getReservationQuery = `
+            SELECT *
+            FROM reservations
+            WHERE reservation_id = ?
+        `;
+        const [reservationRows] = await con.promise().query<RowDataPacket[]>(getReservationQuery, [reservationId]);
+        const reservation: RowDataPacket | undefined = (reservationRows as RowDataPacket[])[0];
+        console.log(reservationRows)
+        // 예약이 존재하지 않을 경우
+        if (!reservation || !reservationRows.length) {
+            return res.status(404).json({ error: '예약을 찾을 수 없습니다.' });
+        }
+
+        // 예약자와 로그인된 사용자의 이메일 비교
+        const isMyReservation = reservation.member_email === email;
+
+        // 지난 예약인 경우
+        const currentDate = new Date();
+        const reservationDate = new Date(reservation.reservation_date);
+        if (reservationDate < currentDate) {
+            return res.status(400).json({ error: '지난 예약은 취소할 수 없습니다.' });
+        }
+
+        // 일반 사용자는 자신의 예약만 삭제 가능
+        if (isMyReservation) {
+            // 예약 삭제
+            const deleteReservationQuery = `
+            DELETE FROM reservations
+            WHERE reservation_id = ?
+          `;
+            await con.promise().query(deleteReservationQuery, [reservationId]);
+
+            return res.status(200).json({ message: '예약이 삭제되었습니다.' });
+        }
+        // 권한이 없는 경우
+        return res.status(403).json({ error: '내 예약만 삭제할 수 있습니다.' });
+    } catch (err) {
+        console.error(err);
+        return Promise.reject(err);
+    }
+};
+
+
+// export const deleteReservation = async (
+//     req: AuthenticatedRequest,
+//     res: Response,
+//     next: NextFunction
+// ) => {
+//     try {
+//         const { reservationId } = req.params;
+
+//         // 예약 정보 조회
+//         const getReservationQuery = `
+//         SELECT *
+//         FROM reservations
+//         WHERE reservation_id = ?
+//       `;
+//         const [reservationRows] = await con.promise().query<RowDataPacket[]>(getReservationQuery, [
+//             reservationId,
+//         ]);
+//         const reservation: RowDataPacket | undefined = (reservationRows as RowDataPacket[])[0];
+
+//         // 예약이 존재하지 않을 경우
+//         if (!reservation) {
+//             return res.status(404).json({ error: '예약을 찾을 수 없습니다.' });
+//         }
+
+//         // 예약자와 로그인된 사용자의 이메일 비교
+//         const userEmail = req.user?.email;
+//         const isMyReservation = reservation.member_email === userEmail;
+
+//         // 일반 사용자는 자신의 예약만 삭제 가능
+//         if (!isMyReservation) {
+//             return res.status(403).json({ error: '권한이 없습니다.' });
+//         }
+
+//         // 예약 삭제
+//         const deleteReservationQuery = `
+//         DELETE FROM reservations
+//         WHERE reservation_id = ?
+//       `;
+//         await con.promise().query(deleteReservationQuery, [reservationId]);
+
+//         return res.status(200).json({ message: '예약이 삭제되었습니다.' });
+//     } catch (err) {
+//         console.error(err);
+//         return Promise.reject(err);
+//     }
+// };
+
+
+
+
+// 내 예약 조회 (일반사용자)
 export const getMyReservation = async (
     req: Request,
     res: Response,
@@ -214,9 +318,12 @@ export const getMyReservation = async (
         return res.status(200).json({ pastReservations, upcomingReservations });
     } catch (err) {
         console.error(err);
-        return res.status(500).json({ error: 'Internal server error' });
+        return Promise.reject(err)
     }
 };
+
+// 날짜별 전체 예약 조회 (관리자)
+
 
 // 내 예약 조회
 // export const getMyReservation = async (
@@ -248,3 +355,5 @@ export const getMyReservation = async (
 //         return res.status(500).json({ error: 'Internal server error' });
 //     }
 // };
+
+
