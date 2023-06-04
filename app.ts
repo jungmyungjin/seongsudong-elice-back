@@ -5,6 +5,7 @@ import express, { Request, Response, NextFunction } from 'express';
 
 import commentRouter from './src/routes/comment-routes';
 import memberRouter from './src/routes/member-routes';
+import adminRouter from './src/routes/admin-routes';
 import postRouter from './src/routes/post-routes';
 import reservationRouter from './src/routes/reservaton-routes';
 
@@ -63,6 +64,7 @@ app.listen(3000, () => {
 app.get('/auth/google', googleStrategy);
 app.get('/auth/google/callback', googleCallback, googleCallbackRedirect);
 app.use('/api/members', memberRouter);
+app.use('/api/admin', adminRouter);
 app.use('/api/comments', commentRouter);
 app.use('/api/posts', postRouter);
 app.use('/api/reservations', reservationRouter);
