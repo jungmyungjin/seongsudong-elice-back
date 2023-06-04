@@ -1,10 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { RowDataPacket } from 'mysql2/promise';
-import passport from '../middlewares/passport'
-
 import con from '../../connection';
 import { v4 as uuidv4 } from 'uuid';
-
 
 // 예약 생성
 export const createReservation = async (
@@ -34,8 +31,7 @@ export const createReservation = async (
         `;
 
         const [seatRows] = await con.promise().query(getSeatQuery, [seat_number]);
-        const seat: RowDataPacket = (seatRows as RowDataPacket[])[0];
-        //위 코드에서 빈배열이면어떻게 될까요? 바로 서버가 꺼지는건지 궁금합니다.
+        const seat: RowDataPacket | undefined = (seatRows as RowDataPacket[])[0];
 
         if (!seat) {
             return res.status(400).json({ error: 'Invalid seat number' });
@@ -130,6 +126,7 @@ export const seatCheck = async (req: Request, res: Response): Promise<Response> 
         const [seatRows] = await con.promise().query<RowDataPacket[]>(getSeatsQuery);
         const seats: RowDataPacket[] = seatRows;
 
+
         // 시간대별 예약 가능 여부 초기화
         const seatAvailability: { [seatNumber: string]: any } = {};
 
@@ -164,9 +161,6 @@ export const seatCheck = async (req: Request, res: Response): Promise<Response> 
                 seatAvailability[seatNumber].available18to22 = false;
             }
         });
-
-
-
         return res.status(200).json(seatAvailability);
     } catch (err) {
         console.error(err);
@@ -181,8 +175,10 @@ export const getMyReservation = async (
     next: NextFunction,
 ) => {
     try {
-        // 로그인된 사용자의 이메일 가져오기 *에러*
+        // 로그인된 사용자의 이메일 가져오기 (토큰조회방식)
         //const userEmail = req.user.email;
+        const userEmail = req.query.member_email;
+        console.log(userEmail)
 
         // 현재 날짜 및 시간
         const currentDate = new Date();
@@ -193,12 +189,13 @@ export const getMyReservation = async (
             FROM reservations
             WHERE member_email = ? AND reservation_date < ?
         `;
+
         const [pastReservationRows] = await con.promise().query<RowDataPacket[]>(pastReservationsQuery, [
-            //userEmail, *에러*
+            userEmail,
             currentDate,
         ]);
         const pastReservations: RowDataPacket[] = pastReservationRows;
-
+        console.log(pastReservations)
         // 다가오는 예약 조회
         const upcomingReservationsQuery = `
             SELECT *
@@ -206,7 +203,7 @@ export const getMyReservation = async (
             WHERE member_email = ? AND reservation_date >= ?
         `;
         const [upcomingReservationRows] = await con.promise().query<RowDataPacket[]>(upcomingReservationsQuery, [
-            //userEmail, *에러*
+            userEmail,
             currentDate,
         ]);
         const upcomingReservations: RowDataPacket[] = upcomingReservationRows;
@@ -217,3 +214,34 @@ export const getMyReservation = async (
         return res.status(500).json({ error: 'Internal server error' });
     }
 };
+
+// 내 예약 조회
+// export const getMyReservation = async (
+//     req: Request,
+//     res: Response,
+//     next: NextFunction,
+// ) => {
+//     try {
+//         // 로그인된 사용자의 이메일 가져오기
+//         const userEmail = req.query.member_email;
+//         console.log(userEmail);
+
+//         // 전체 예약 조회
+//         const allReservationsQuery = `
+//             SELECT *
+//             FROM reservations
+//             WHERE member_email = ?
+//         `;
+
+//         const [reservationRows] = await con.promise().query<RowDataPacket[]>(allReservationsQuery, [
+//             userEmail,
+//         ]);
+//         const reservations: RowDataPacket[] = reservationRows;
+//         console.log(reservationRows);
+
+//         return res.status(200).json({ reservations });
+//     } catch (err) {
+//         console.error(err);
+//         return res.status(500).json({ error: 'Internal server error' });
+//     }
+// };

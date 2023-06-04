@@ -6,8 +6,11 @@ import con from '../../connection';
 
 
 export interface User {
-  email: string | undefined;
-  shortId: string;
+  email: string;
+  name: string;
+  generation: string;
+  isAdmin: boolean;
+  createdAt: string;
 }
 
 passport.use(
@@ -24,7 +27,15 @@ passport.use(
 
       try {
         const user = await checkExistingUser(processedEmail);
-        done(null, user.user); // user.user로 변경하여 user 객체만 저장
+        const query = "SELECT * FROM members WHERE email = ?";
+        const [rows] = await con.promise().query(query, [processedEmail]);
+        const userData = (rows as RowDataPacket[])[0] || undefined;
+
+        if (userData) {
+          user.user.isAdmin = userData.isAdmin === 1; // 1일 경우 true, 그 외의 값일 경우 false로 설정
+          console.log('관리자님 환영합니다.');
+        }
+        done(null, user.user);
         console.log(user.user.email);
       } catch (e) {
         const error = new Error('An error occurred');
@@ -42,6 +53,8 @@ passport.serializeUser((user, done) => {
 passport.deserializeUser((user: User, done) => {
   done(null, user)
 });
+
+
 
 // 기존 회원 여부 확인
 export async function checkExistingUser(email: string): Promise<any> {
@@ -62,8 +75,7 @@ export async function checkExistingUser(email: string): Promise<any> {
       return { existing: false };
     }
   } catch (error) {
-    console.error('An error occurred in checkExistingUser:', error);
-    throw error;
+    return Promise.reject(error)
   }
 }
 
@@ -91,8 +103,7 @@ export async function createUser(email: string, name: string, generation: string
 
     return createdUser;
   } catch (error) {
-    console.error('An error occurred in createUser:', error);
-    throw error;
+    return Promise.reject(error)
   }
 }
 
@@ -155,7 +166,6 @@ export async function getMemberPosts(email: string): Promise<any[]> {
     throw error;
   }
 }
-
 
 export function googleStrategy(req: Request, res: Response, next: NextFunction) {
   if (req.user) {
