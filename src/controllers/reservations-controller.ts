@@ -232,57 +232,6 @@ export const cancelReservation = async (
     }
 };
 
-
-// export const deleteReservation = async (
-//     req: AuthenticatedRequest,
-//     res: Response,
-//     next: NextFunction
-// ) => {
-//     try {
-//         const { reservationId } = req.params;
-
-//         // 예약 정보 조회
-//         const getReservationQuery = `
-//         SELECT *
-//         FROM reservations
-//         WHERE reservation_id = ?
-//       `;
-//         const [reservationRows] = await con.promise().query<RowDataPacket[]>(getReservationQuery, [
-//             reservationId,
-//         ]);
-//         const reservation: RowDataPacket | undefined = (reservationRows as RowDataPacket[])[0];
-
-//         // 예약이 존재하지 않을 경우
-//         if (!reservation) {
-//             return res.status(404).json({ error: '예약을 찾을 수 없습니다.' });
-//         }
-
-//         // 예약자와 로그인된 사용자의 이메일 비교
-//         const userEmail = req.user?.email;
-//         const isMyReservation = reservation.member_email === userEmail;
-
-//         // 일반 사용자는 자신의 예약만 삭제 가능
-//         if (!isMyReservation) {
-//             return res.status(403).json({ error: '권한이 없습니다.' });
-//         }
-
-//         // 예약 삭제
-//         const deleteReservationQuery = `
-//         DELETE FROM reservations
-//         WHERE reservation_id = ?
-//       `;
-//         await con.promise().query(deleteReservationQuery, [reservationId]);
-
-//         return res.status(200).json({ message: '예약이 삭제되었습니다.' });
-//     } catch (err) {
-//         console.error(err);
-//         return Promise.reject(err);
-//     }
-// };
-
-
-
-
 // 내 예약 조회 (일반사용자)
 export const getMyReservation = async (
     req: Request,
@@ -329,39 +278,4 @@ export const getMyReservation = async (
         return Promise.reject(err)
     }
 };
-
-// 날짜별 전체 예약 조회 (관리자)
-
-
-// 내 예약 조회
-// export const getMyReservation = async (
-//     req: Request,
-//     res: Response,
-//     next: NextFunction,
-// ) => {
-//     try {
-//         // 로그인된 사용자의 이메일 가져오기
-//         const userEmail = req.query.member_email;
-//         console.log(userEmail);
-
-//         // 전체 예약 조회
-//         const allReservationsQuery = `
-//             SELECT *
-//             FROM reservations
-//             WHERE member_email = ?
-//         `;
-
-//         const [reservationRows] = await con.promise().query<RowDataPacket[]>(allReservationsQuery, [
-//             userEmail,
-//         ]);
-//         const reservations: RowDataPacket[] = reservationRows;
-//         console.log(reservationRows);
-
-//         return res.status(200).json({ reservations });
-//     } catch (err) {
-//         console.error(err);
-//         return res.status(500).json({ error: 'Internal server error' });
-//     }
-// };
-
 

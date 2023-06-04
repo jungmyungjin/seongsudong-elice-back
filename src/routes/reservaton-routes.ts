@@ -17,7 +17,7 @@ router.post('/', createReservation);
 // 예약 취소(일반사용자)
 router.delete('/cancel-reservation', cancelReservation);
 
-// 내 예약 조회
+// 내 예약 조회(일반사용자)
 router.get('/reservation-check', getMyReservation);
 
 export default router;
