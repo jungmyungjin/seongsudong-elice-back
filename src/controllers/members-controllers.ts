@@ -32,8 +32,7 @@ passport.use(
         const userData = (rows as RowDataPacket[])[0] || undefined;
 
         if (userData) {
-          user.user.isAdmin = userData.isAdmin === 1; // 1일 경우 true, 그 외의 값일 경우 false로 설정
-          console.log('관리자님 환영합니다.');
+          user.user.isAdmin = userData.isAdmin === 1; // 1일 경우 true, 그 외의 값일 경우 false로 설정a
         }
         done(null, user.user);
         console.log(user.user.email);
@@ -53,8 +52,6 @@ passport.serializeUser((user, done) => {
 passport.deserializeUser((user: User, done) => {
   done(null, user)
 });
-
-
 
 // 기존 회원 여부 확인
 export async function checkExistingUser(email: string): Promise<any> {
@@ -106,8 +103,6 @@ export async function createUser(email: string, name: string, generation: string
     return Promise.reject(error)
   }
 }
-
-
 
 //로그아웃
 export function logout(req: Request, res: Response) {
