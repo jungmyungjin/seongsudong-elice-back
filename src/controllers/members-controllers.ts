@@ -4,27 +4,38 @@ import { Strategy as GoogleStrategy, Profile } from 'passport-google-oauth20';
 import { RowDataPacket } from 'mysql2/promise';
 import con from '../../connection';
 
-const config = {
-  clientID: "176418337321-nlsk84qeitsk1d5r4ssl2indih8sea5t.apps.googleusercontent.com",
-  clientSecret: "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",
-  callbackURL: "/auth/google/callback"
-};
 
-interface User {
-  email: string | undefined;
-  shortId: string;
+export interface User {
+  email: string;
+  name: string;
+  generation: string;
+  isAdmin: boolean;
+  createdAt: string;
 }
 
 passport.use(
   new GoogleStrategy(
-    config,
-    async (accessToken, refreshToken, profile, done) => {
+    {
+      clientID: process.env.CLIENT_ID!,
+      clientSecret: process.env.CLIENT_SECRET!,
+      callbackURL: process.env.CALLBACK_URL!,
+      passReqToCallback: true,
+    },
+    async (req, accessToken, refreshToken, profile, done) => {
       const { email } = profile._json;
       const processedEmail = email ? email : '';
 
       try {
         const user = await checkExistingUser(processedEmail);
-        done(null, user.user); // user.user로 변경하여 user 객체만 저장
+        const query = "SELECT * FROM members WHERE email = ?";
+        const [rows] = await con.promise().query(query, [processedEmail]);
+        const userData = (rows as RowDataPacket[])[0] || undefined;
+
+        if (userData) {
+          user.user.isAdmin = userData.isAdmin === 1; // 1일 경우 true, 그 외의 값일 경우 false로 설정
+          console.log('관리자님 환영합니다.');
+        }
+        done(null, user.user);
         console.log(user.user.email);
       } catch (e) {
         const error = new Error('An error occurred');
@@ -35,7 +46,6 @@ passport.use(
   )
 );
 
-
 passport.serializeUser((user, done) => {
   done(null, user);
 });
@@ -43,6 +53,8 @@ passport.serializeUser((user, done) => {
 passport.deserializeUser((user: User, done) => {
   done(null, user)
 });
+
+
 
 // 기존 회원 여부 확인
 export async function checkExistingUser(email: string): Promise<any> {
@@ -63,8 +75,7 @@ export async function checkExistingUser(email: string): Promise<any> {
       return { existing: false };
     }
   } catch (error) {
-    console.error('An error occurred in checkExistingUser:', error);
-    throw error;
+    return Promise.reject(error)
   }
 }
 
@@ -75,7 +86,6 @@ export async function createUser(email: string, name: string, generation: string
     connection = await con;
 
     const createdAt = new Date().toISOString().slice(0, 19).replace('T', ' ');
-
     const [insertResult] = await connection.promise().query<any>(
       'INSERT INTO members (email, name, generation, isAdmin, createdAt) VALUES (?, ?, ?, ?, ?)',
       [email, name, generation, isAdmin, createdAt]
@@ -93,10 +103,11 @@ export async function createUser(email: string, name: string, generation: string
 
     return createdUser;
   } catch (error) {
-    console.error('An error occurred in createUser:', error);
-    throw error;
+    return Promise.reject(error)
   }
 }
+
+
 
 //로그아웃
 export function logout(req: Request, res: Response) {
@@ -155,7 +166,6 @@ export async function getMemberPosts(email: string): Promise<any[]> {
     throw error;
   }
 }
-
 
 export function googleStrategy(req: Request, res: Response, next: NextFunction) {
   if (req.user) {

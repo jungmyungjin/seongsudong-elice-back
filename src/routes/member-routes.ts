@@ -1,6 +1,6 @@
 import express, { Request, Response, NextFunction } from 'express';
-import { getMemberPosts, checkExistingUser, createUser, logout } from '../controllers/members-controllers';
-import { googleCallback, googleCallbackRedirect, googleStrategy } from '../controllers/members-controllers';
+import { getMemberPosts, checkExistingUser, createUser, googleCallback, googleCallbackRedirect, googleStrategy, logout } from '../controllers/members-controllers';
+import { isAdmin, AuthenticatedRequest } from '../middlewares/isAdmin'
 import passport from 'passport';
 
 const router = express.Router();
@@ -27,10 +27,8 @@ router.post('/logout', logout);
 //기존유저인지조회
 router.get('/existuser-check', async (req: Request, res: Response) => {
   const { email } = req.query;
-
   try {
     const result = await checkExistingUser(email as string);
-
     res.json(result);
   } catch (error) {
     console.error('An error occurred:', error);
@@ -41,10 +39,8 @@ router.get('/existuser-check', async (req: Request, res: Response) => {
 //회원가입
 router.post('/register', async (req: Request, res: Response) => {
   const { email, name, generation } = req.body;
-
   try {
     const createdUser = await createUser(email, name, generation);
-
     res.json(createdUser);
   } catch (error) {
     console.error('An error occurred:', error);
@@ -66,8 +62,11 @@ router.get('/posts', async (req: Request, res: Response, next: NextFunction) => 
   }
 });
 
-
-
+// 어드민페이지 
+router.get('/admin', isAdmin as any, (req, res) => {
+  // isAdmin 미들웨어를 통과한 경우에만 실행됨
+  res.send('관리자 페이지');
+});
 
 
 

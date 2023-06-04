@@ -1,6 +1,6 @@
 CREATE TABLE
     reservations (
-        resevation_id VARCHAR(50) PRIMARY KEY NOT NULL DEFAULT '',
+        reservation_id VARCHAR(50) PRIMARY KEY NOT NULL DEFAULT '',
         member_generation VARCHAR(50) NOT NULL,
         member_name VARCHAR(50) NOT NULL,
         member_email VARCHAR(255) NOT NULL,
