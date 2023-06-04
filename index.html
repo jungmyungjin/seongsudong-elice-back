@@ -1,9 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <title>Google Login</title>
 </head>
+
 <body>
   <h1>Google Login</h1>
   <button onclick="googleLogin()">Google Login</button>
@@ -21,6 +23,9 @@
 
   <button onclick="getPosts()">게시물 조회</button>
   <div id="postList"></div>
+
+  <h1>Admin Reservation Cancellation Test</h1>
+  <button id="cancelBtn">Cancel Reservation</button>
 
   <script>
     function googleLogin() {
@@ -58,6 +63,29 @@
           console.error('게시물 조회 에러:', error);
         });
     }
+
+    const reservationId = '12345678'; // 취소할 예약의 ID를 입력하세요
+
+    // 예약 취소 버튼 클릭 시 API 호출
+    document.getElementById('cancelBtn').addEventListener('click', async () => {
+      try {
+        const response = await fetch(`/api/cancel-reservation/${reservationId}`, {
+          method: 'DELETE',
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          console.log(data.message);
+        } else {
+          const errorData = await response.json();
+          console.error(errorData.error);
+        }
+      } catch (error) {
+        console.error('An error occurred:', error);
+      }
+    });
+
   </script>
 </body>
+
 </html>

@@ -1,7 +1,7 @@
 import express, { Request, Response, NextFunction } from 'express';
 import { isAdmin } from '../middlewares/isAdmin'
 import passport from 'passport';
-import { getUserReservations } from '../controllers/admin-controllers';
+import { getUserReservations, cancelReservationByAdmin } from '../controllers/admin-controllers';
 
 const router = express.Router();
 
@@ -12,5 +12,5 @@ router.get('/', isAdmin as any, (req, res) => {
 });
 
 router.get('/reservations/:date', getUserReservations)
-
+router.delete('/delete-reservation/:reservationId', cancelReservationByAdmin)
 export default router;

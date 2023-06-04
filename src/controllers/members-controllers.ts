@@ -34,8 +34,10 @@ passport.use(
         if (userData) {
           user.user.isAdmin = userData.isAdmin === 1; // 1일 경우 true, 그 외의 값일 경우 false로 설정
         }
+        // accessToken을 req.user에 할당
+        user.user.token = accessToken;
+
         done(null, user.user);
-        console.log('관리자권한', accessToken);
       } catch (e) {
         const error = new Error('An error occurred');
         console.log(e);
