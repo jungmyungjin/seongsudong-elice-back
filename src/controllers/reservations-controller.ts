@@ -127,6 +127,7 @@ export const createReservation = async (
             return res.status(400).json({ error: '해당 좌석은 이미 예약된 좌석입니다.' });
         }
 
+
         // 예약 생성
         const reservation_id = uuidv4();
 
@@ -232,7 +233,75 @@ export const cancelReservation = async (
     }
 };
 
-// 내 예약 조회 (일반사용자)
+// 예약 취소(일반사용자)
+export const cancelReservation = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+) => {
+    try {
+        const { reservationId, email } = req.body;
+        console.log(reservationId)
+        // 예약 정보 조회
+        const getReservationQuery = `
+            SELECT *
+            FROM reservations
+            WHERE reservation_id = ?
+        `;
+        const [reservationRows] = await con.promise().query<RowDataPacket[]>(getReservationQuery, [reservationId]);
+        const reservation: RowDataPacket | undefined = (reservationRows as RowDataPacket[])[0];
+        console.log(reservationRows)
+        // 예약이 존재하지 않을 경우
+        if (!reservation || !reservationRows.length) {
+            return res.status(404).json({ error: '예약을 찾을 수 없습니다.' });
+        }
+
+        // 예약자와 로그인된 사용자의 이메일 비교
+        const isMyReservation = reservation.member_email === email;
+
+        // 현재 날짜와 예약된 날짜 비교 
+        const currentDate = new Date();
+        const reservationDate = new Date(reservation.reservation_date);
+        console.log(reservationDate)
+        // 지난 예약인 경우
+        if (reservationDate < currentDate) {
+            return res.status(400).json({ error: '지난 예약은 취소할 수 없습니다.' });
+        }
+
+        // 현재시간
+        const currentDateTime = new Date().toLocaleString('en-US', { timeZone: 'Asia/Seoul' });
+        console.log(currentDateTime);
+
+        // 예약 체크인 시간
+        const checkInTime = reservation.start_time;
+        console.log(checkInTime)
+        console.log('현재시간', currentDateTime)
+        // 예약 체크인 시간보다 현재 시간이 이후인 경우 (체크인 시간이 지난 경우)
+        if (currentDateTime > checkInTime) {
+            return res.status(400).json({ error: '체크인 시간이 지나 예약을 취소할 수 없습니다.' });
+        }
+
+        // 일반 사용자는 자신의 예약만 삭제 가능
+        if (isMyReservation) {
+            // 예약 삭제
+            const deleteReservationQuery = `
+            DELETE FROM reservations
+            WHERE reservation_id = ?
+          `;
+            await con.promise().query(deleteReservationQuery, [reservationId]);
+
+            return res.status(200).json({ message: '예약이 삭제되었습니다.' });
+        }
+        // 권한이 없는 경우
+        return res.status(403).json({ error: '내 예약만 삭제할 수 있습니다.' });
+    } catch (err) {
+        console.error(err);
+        return Promise.reject(err);
+    }
+};
+
+
+// 내 예약 조회
 export const getMyReservation = async (
     req: Request,
     res: Response,
