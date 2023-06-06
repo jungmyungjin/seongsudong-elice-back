@@ -5,6 +5,7 @@ import express, { Request, Response, NextFunction } from 'express';
 
 import commentRouter from './src/routes/comment-routes';
 import memberRouter from './src/routes/member-routes';
+//import authRouter from './src/routes/auth-routes'
 import adminRouter from './src/routes/admin-routes';
 import postRouter from './src/routes/post-routes';
 import reservationRouter from './src/routes/reservaton-routes';
@@ -45,6 +46,7 @@ app.use(
   }),
 );
 
+
 // Express 애플리케이션에 세션 미들웨어 추가
 app.use(session(sessionConfig));
 
@@ -61,6 +63,8 @@ app.listen(3000, () => {
   console.log('server on!');
 });
 
+
+
 app.get('/auth/google', googleStrategy);
 app.get('/auth/google/callback', googleCallback, googleCallbackRedirect);
 app.use('/api/members', memberRouter);
@@ -68,3 +72,4 @@ app.use('/api/admin', adminRouter);
 app.use('/api/comments', commentRouter);
 app.use('/api/posts', postRouter);
 app.use('/api/reservations', reservationRouter);
+//app.use('/', authRouter);
