@@ -114,7 +114,7 @@ export const createReservation = async (
 };
 
 // 좌석조회
-export const seatCheck = async (req: Request, res: Response): Promise<Response> => {
+export const seatCheck = async (req: Request, res: Response): Promise<{ [seatNumber: string]: any } | Response> => {
     try {
         const { reservation_date } = req.query;
         console.log(reservation_date)
@@ -176,9 +176,10 @@ export const seatCheck = async (req: Request, res: Response): Promise<Response> 
         return res.status(200).json(seatAvailability);
     } catch (err) {
         console.error(err);
-        return res.status(500).json({ error: 'Internal server error' });
+        return Promise.reject(err);
     }
 };
+
 
 // 예약 취소(일반사용자)
 export const cancelReservation = async (
@@ -247,7 +248,6 @@ export const cancelReservation = async (
     }
 };
 
-
 // 내 예약 조회
 export const getMyReservation = async (
     req: Request,
@@ -291,9 +291,11 @@ export const getMyReservation = async (
         return res.status(200).json({ pastReservations, upcomingReservations });
     } catch (err) {
         console.error(err);
-        return res.status(500).json({ error: 'Internal server error' });
+        return Promise.reject(err)
     }
 };
+
+
 
 // 내 예약 조회
 // export const getMyReservation = async (
