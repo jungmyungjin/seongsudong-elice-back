@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import { ResultSetHeader, RowDataPacket } from 'mysql2/promise';
 
 import con from '../../connection';
+// import { checkUserExist } from '../validation/checkUserExist';
 
 // 특정 게시물에 댓글을 추가하는 함수
 export const createComment = async (
@@ -41,6 +42,15 @@ export const createComment = async (
 
     throw new Error(`Error searching member: ${err}`);
   }
+
+  // checkUserExist(res, next, email);
+
+  // try {
+  //   checkUserExist(res, next, email);
+  // } catch (err) {
+  //   // throw new Error('에러에러에러에러');
+  //   return new Error('에러에러에러에러');
+  // }
 
   // 존재하는 게시물인지 확인
   const searchPostQuery = 'SELECT * FROM posts WHERE id = ?';
@@ -105,8 +115,8 @@ export const deleteComment = async (
   next: NextFunction,
 ) => {
   const postId = req.params.postId;
-  const email = req.body.email;
-  const commentId = req.body.commentId;
+  const commentId = req.params.commentId;
+  const email = req.params.email;
 
   // 로그인 확인
   if (!email) {
@@ -208,11 +218,11 @@ export const deleteCommentAdmin = async (
   next: NextFunction,
 ) => {
   const postId = req.params.postId;
-  const email = req.body.email;
-  const commentId = req.body.commentId;
-  const isAdmin = req.body.isAdmin;
+  const email = req.params.email;
+  const commentId = req.params.commentId;
+  const isAdmin = parseInt(req.params.isAdmin);
 
-  // 관리자 요청인지 확인 req.body.isAdmin 정보 확인
+  // 관리자 요청인지 확인 req.params.isAdmin 정보 확인
   if (!isAdmin) {
     return res.status(500).json({ message: '관리자가 아닙니다.' });
   }
