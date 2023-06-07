@@ -14,7 +14,7 @@ router.use(passport.session());
 //router.get('/auth/google', googleStrategy);
 
 // Google OAuth 인증 요청 처리
-router.post('/auth/google', googleStrategy);
+router.get('/auth/google', googleStrategy);
 router.get('/auth/google/callback', googleCallback, googleCallbackRedirect);
 router.post('/logout', logout);
 

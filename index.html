@@ -29,47 +29,47 @@
 
   <script>
     // 기존 구글로그인 방법 (index.html)
-    // function googleLogin() {
-    //   window.location.href = "/api/members/auth/google";
-    // }
     function googleLogin() {
-      const redirectUri = encodeURIComponent(window.location.href);
-      window.location.href = `/api/members/auth/google`;
+      window.location.href = "/api/members/auth/google";
     }
+    // 포스트 방식
+    // function googleLogin() {
+    //   fetch('/api/members/auth/google', {
+    //     method: 'POST',
+    //     headers: {
+    //       'Content-Type': 'application/json',
+    //     },
+    //     body: JSON.stringify({}),
+    //   })
+    //     .then(handleLoginResponse)
+    //     .catch(error => {
+    //       console.error('에러 발생:', error);
+    //     });
+    // }
 
-    function handleLoginResponse(response) {
-      if (response.ok) {
-        console.log('인증 코드 전송 성공');
-      } else {
-        console.error('인증 코드 전송 실패');
-      }
-    }
-
-    function sendCodeToBackend(code) {
-      const requestBody = {
-        code: code
-      };
-
-      fetch('/api/members/auth/google', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(requestBody),
-      })
-        .then(handleLoginResponse)
+    // function handleLoginResponse(response) {
+    //   if (response.ok) {
+    //     console.log('인증 코드 전송 성공');
+    //   } else {
+    //     console.error('인증 코드 전송 실패');
+    //   }
+    // }
+    function logout() {
+      fetch('/api/members/logout', { method: 'POST' })
+        .then(response => {
+          if (response.ok) {
+            // 로그아웃 성공
+            window.location.href = "/"; // 로그아웃 후 리다이렉트할 경로
+          } else {
+            // 로그아웃 실패
+            console.error('로그아웃 실패');
+          }
+        })
         .catch(error => {
           console.error('에러 발생:', error);
         });
     }
 
-    // Google 로그인 후 인증 코드를 백엔드로 전송
-    const urlParams = new URLSearchParams(window.location.search);
-    const code = urlParams.get('code');
-
-    if (code) {
-      sendCodeToBackend(code);
-    }
 
     function getPosts() {
       fetch('/api/members/posts')

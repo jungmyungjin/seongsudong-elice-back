@@ -14,44 +14,6 @@ export interface User {
   isAdmin: boolean;
 }
 
-passport.use(
-  new GoogleStrategy(
-    {
-      clientID: process.env.CLIENT_ID!,
-      clientSecret: process.env.CLIENT_SECRET!,
-      callbackURL: process.env.CALLBACK_URL!,
-      passReqToCallback: true,
-    },
-    async (req, accessToken, refreshToken, profile, done) => {
-      const email1 = { scope: ['email'] }
-      console.log('email', email1)//출력x
-      console.log('profile', req.user)//출력x
-      console.log('accessToken', accessToken)//출력x
-      const { email } = profile._json;
-      const processedEmail = email ? email : '';
-
-      try {
-        const user = await checkExistingUser(processedEmail);
-        const query = "SELECT * FROM members WHERE email = ?";
-        const [rows] = await con.promise().query(query, [processedEmail]);
-        const userData = (rows as RowDataPacket[])[0] || undefined;
-
-        if (userData) {
-          user.user.isAdmin = userData.isAdmin === 1; // 1일 경우 true, 그 외의 값일 경우 false로 설정a
-        }
-        done(null, user.user);
-        console.log(user.user.email);
-      } catch (e) {
-        const error = new Error('An error occurred');
-        console.log(e);
-        done(error, undefined);
-      }
-    }
-  )
-);
-
-
-//기존 index.html과 연결했을 때 된 코드(로컬)
 // passport.use(
 //   new GoogleStrategy(
 //     {
@@ -61,6 +23,10 @@ passport.use(
 //       passReqToCallback: true,
 //     },
 //     async (req, accessToken, refreshToken, profile, done) => {
+//       const email1 = { scope: ['email'] }
+//       console.log('email', email1)//출력x
+//       console.log('profile', req.user)//출력x
+//       console.log('accessToken', accessToken)//출력x
 //       const { email } = profile._json;
 //       const processedEmail = email ? email : '';
 
@@ -83,6 +49,39 @@ passport.use(
 //     }
 //   )
 // );
+
+
+//기존 index.html과 연결했을 때 된 코드(로컬)
+passport.use(
+  new GoogleStrategy(
+    {
+      clientID: process.env.CLIENT_ID!,
+      clientSecret: process.env.CLIENT_SECRET!,
+      callbackURL: process.env.CALLBACK_URL!,
+    },
+    async (accessToken, refreshToken, profile, done) => {
+      const { email } = profile._json;
+      const processedEmail = email ? email : '';
+
+      try {
+        const user = await checkExistingUser(processedEmail);
+        const query = "SELECT * FROM members WHERE email = ?";
+        const [rows] = await con.promise().query(query, [processedEmail]);
+        const userData = (rows as RowDataPacket[])[0] || undefined;
+
+        if (userData) {
+          user.user.isAdmin = userData.isAdmin === 1; // 1일 경우 true, 그 외의 값일 경우 false로 설정a
+        }
+        done(null, user.user);
+        console.log(user.user.email);
+      } catch (e) {
+        const error = new Error('An error occurred');
+        console.log(e);
+        done(error, undefined);
+      }
+    }
+  )
+);
 
 
 
@@ -214,6 +213,7 @@ export function googleStrategy(req: Request, res: Response, next: NextFunction) 
   } else {
     // 로그인 요청 처리
     console.log('로그인요청완료')
+    console.log(req.query)
     passport.authenticate('google', { scope: ['email'] })(req, res, next);
 
   }

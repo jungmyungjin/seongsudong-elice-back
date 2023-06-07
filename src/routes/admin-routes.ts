@@ -11,6 +11,9 @@ router.get('/', isAdmin as any, (req, res) => {
     res.send('관리자 페이지');
 });
 
+// 날짜별 예약조회
 router.get('/reservations/:date', getUserReservations)
+
+// 날짜삭제
 router.delete('/delete-reservation/:reservationId', cancelReservationByAdmin)
 export default router;
