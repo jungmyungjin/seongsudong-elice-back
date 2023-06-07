@@ -2,7 +2,7 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 import express, { Request, Response, NextFunction } from 'express';
-
+import bodyParser from 'body-parser';
 import commentRouter from './src/routes/comment-routes';
 import memberRouter from './src/routes/member-routes';
 //import authRouter from './src/routes/auth-routes'
@@ -17,7 +17,8 @@ import cors from 'cors';
 import {
   googleCallback,
   googleCallbackRedirect,
-  googleStrategy,
+
+
 } from './src/controllers/members-controllers';
 
 const app = express();
@@ -63,10 +64,15 @@ app.listen(3000, () => {
   console.log('server on!');
 });
 
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.json());
 
 
-app.get('/auth/google', googleStrategy);
-app.get('/auth/google/callback', googleCallback, googleCallbackRedirect);
+// POST 요청 처리
+app.post('/auth/google', passport.authenticate('google', { scope: ['email', 'profile'] }))
+
+
+//app.post('/auth/google/callback', googleCallback, googleCallbackRedirect);
 app.use('/api/members', memberRouter);
 app.use('/api/admin', adminRouter);
 app.use('/api/comments', commentRouter);
