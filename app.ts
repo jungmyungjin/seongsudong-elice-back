@@ -17,6 +17,7 @@ import cors from 'cors';
 import {
   googleCallback,
   googleCallbackRedirect,
+  googleStrategy,
 
 
 } from './src/controllers/members-controllers';
@@ -69,7 +70,7 @@ app.use(bodyParser.json());
 
 
 // POST 요청 처리
-app.post('/auth/google', passport.authenticate('google', { scope: ['email', 'profile'] }))
+app.post('/auth/google', googleStrategy)
 
 
 //app.post('/auth/google/callback', googleCallback, googleCallbackRedirect);

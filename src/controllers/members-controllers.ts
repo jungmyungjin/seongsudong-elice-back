@@ -23,8 +23,10 @@ passport.use(
       passReqToCallback: true,
     },
     async (req, accessToken, refreshToken, profile, done) => {
-      console.log('profile', profile)
-      console.log('accessToken', accessToken)
+      const email1 = { scope: ['email'] }
+      console.log('email', email1)//출력x
+      console.log('profile', req.user)//출력x
+      console.log('accessToken', accessToken)//출력x
       const { email } = profile._json;
       const processedEmail = email ? email : '';
 
@@ -49,7 +51,7 @@ passport.use(
 );
 
 
-//기존 index.html과 연결했을 때 된 코드
+//기존 index.html과 연결했을 때 된 코드(로컬)
 // passport.use(
 //   new GoogleStrategy(
 //     {
@@ -204,16 +206,16 @@ export async function getMemberPosts(email: string): Promise<any[]> {
 
 export function googleStrategy(req: Request, res: Response, next: NextFunction) {
   console.log(req.body)
-  const email = req.body?.scope?.split(' ').find((item: string) => item.includes('@'));
-  const processedEmail = email ? email : '';
-  console.log(processedEmail)
+
   if (req.user) {
     // 이미 로그인한 사용자인 경우
     res.redirect('/');
     console.log('이미 로그인한 사용자입니다.')
   } else {
     // 로그인 요청 처리
+    console.log('로그인요청완료')
     passport.authenticate('google', { scope: ['email'] })(req, res, next);
+
   }
 }
 

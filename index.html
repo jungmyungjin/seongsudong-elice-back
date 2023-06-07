@@ -28,6 +28,10 @@
   <button id="cancelBtn">Cancel Reservation</button>
 
   <script>
+    // 기존 구글로그인 방법 (index.html)
+    // function googleLogin() {
+    //   window.location.href = "/api/members/auth/google";
+    // }
     function googleLogin() {
       const redirectUri = encodeURIComponent(window.location.href);
       window.location.href = `/api/members/auth/google`;
