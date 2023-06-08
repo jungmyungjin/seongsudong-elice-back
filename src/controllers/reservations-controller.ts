@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import { RowDataPacket } from 'mysql2/promise';
 import con from '../../connection';
 import { v4 as uuidv4 } from 'uuid';
+import { sendEmail } from '../utils/send-email';
 
 
 // 예약 생성
@@ -97,6 +98,12 @@ export const createReservation = async (
         ];
 
         await con.promise().query(createReservationQuery, createReservationParams);
+
+        // 이메일 보내기
+        const emailText = `성수동 엘리스를 이용해 주셔서 감사합니다. \n \n${member_name}님의 엘리스랩 예약이 아래와 같이 완료되었습니다.\n예약 ID: ${reservation_id} \n예약일자: ${reservation_date} ${start_time} ~ ${end_time} \n예약좌석: ${seat_type} ${seat_number}번 \n\n예약시간을 꼭 지켜주세요.`;
+        const emailSubject = '성수동 엘리스 예약이 완료되었습니다.';
+        const receiver = member_email;
+        sendEmail(receiver, emailSubject, emailText)
         // 예약 정보 조회
         const getReservationQuery = `
             SELECT *
@@ -256,7 +263,7 @@ export const getMyReservation = async (
 ) => {
     try {
         // 로그인된 사용자의 이메일 가져오기 (토큰조회방식)
-        //const userEmail = req.user.email;
+        //]const userEmail = req.user.email;
         const userEmail = req.query.member_email;
         console.log(userEmail)
 

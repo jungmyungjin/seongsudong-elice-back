@@ -2,6 +2,7 @@ import express, { Request, Response, NextFunction } from 'express';
 import {
     createReservation, seatCheck, getMyReservation, cancelReservation
 } from '../controllers/reservations-controller';
+import { sendEmail } from '../utils/send-email'
 
 const postRouter = express.Router();
 const router = express.Router();

@@ -2,7 +2,6 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 import express, { Request, Response, NextFunction } from 'express';
-import bodyParser from 'body-parser';
 import commentRouter from './src/routes/comment-routes';
 import memberRouter from './src/routes/member-routes';
 //import authRouter from './src/routes/auth-routes'
@@ -18,8 +17,6 @@ import {
   googleCallback,
   googleCallbackRedirect,
   googleStrategy,
-
-
 } from './src/controllers/members-controllers';
 
 const app = express();
@@ -65,9 +62,6 @@ app.use('/uploads', express.static('uploads'));
 app.listen(3000, () => {
   console.log('server on!');
 });
-
-app.use(bodyParser.urlencoded({ extended: true }));
-app.use(bodyParser.json());
 
 
 // POST 요청 처리
