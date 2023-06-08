@@ -25,7 +25,7 @@ const fileFilter = (
   if (file.mimetype === 'image/jpeg' || file.mimetype === 'image/png') {
     cb(null, true); // 유효한 파일 형식인 경우 허용
   } else {
-    cb(new Error('Invalid file format')); // 유효하지 않은 파일 형식인 경우 거부
+    cb(null, false); // 유효하지 않은 파일 형식인 경우 거부
   }
 };
 
