@@ -19,7 +19,6 @@ export const createReservation = async (
             reservation_date,
             start_time,
             end_time,
-            num_of_guests,
             visitors,
             seat_number,
             seat_type
@@ -73,13 +72,12 @@ export const createReservation = async (
           reservation_date,
           start_time,
           end_time,
-          num_of_guests,
           visitors,
           seat_number,
           seat_type,
           status
         )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `;
 
         const createReservationParams = [
@@ -90,7 +88,6 @@ export const createReservation = async (
             reservation_date,
             start_time,
             end_time,
-            num_of_guests,
             visitors,
             seat_number,
             seat_type,
@@ -187,7 +184,6 @@ export const seatCheck = async (req: Request, res: Response): Promise<{ [seatNum
     }
 };
 
-
 // 예약 취소(일반사용자)
 export const cancelReservation = async (
     req: Request,
@@ -196,7 +192,7 @@ export const cancelReservation = async (
 ) => {
     try {
         const { reservationId, email } = req.body;
-        console.log(reservationId)
+
         // 예약 정보 조회
         const getReservationQuery = `
             SELECT *
@@ -205,7 +201,7 @@ export const cancelReservation = async (
         `;
         const [reservationRows] = await con.promise().query<RowDataPacket[]>(getReservationQuery, [reservationId]);
         const reservation: RowDataPacket | undefined = (reservationRows as RowDataPacket[])[0];
-        console.log(reservationRows)
+
         // 예약이 존재하지 않을 경우
         if (!reservation || !reservationRows.length) {
             return res.status(404).json({ error: '예약을 찾을 수 없습니다.' });
@@ -215,8 +211,12 @@ export const cancelReservation = async (
         const isMyReservation = reservation.member_email === email;
 
         // 현재 날짜와 예약된 날짜 비교 
-        const currentDate = new Date();
-        const reservationDate = new Date(reservation.reservation_date);
+        // const currentDate = new Date();
+
+        // const reservationDate = new Date(reservation.reservation_date);
+        const currentDate = new Date().toLocaleDateString('en-US', { timeZone: 'Asia/Seoul' });
+        const reservationDate = new Date(reservation.reservation_date).toLocaleDateString('en-US', { timeZone: 'Asia/Seoul' });
+
         console.log(reservationDate)
         // 지난 예약인 경우
         if (reservationDate < currentDate) {
@@ -224,15 +224,15 @@ export const cancelReservation = async (
         }
 
         // 현재시간
-        const currentDateTime = new Date().toLocaleString('en-US', { timeZone: 'Asia/Seoul' });
-        console.log(currentDateTime);
+        const options = { timeZone: 'Asia/Seoul', hour12: false };
+        const currentTime = new Date().toLocaleTimeString('en-US', options);
 
         // 예약 체크인 시간
         const checkInTime = reservation.start_time;
-        console.log(checkInTime)
-        console.log('현재시간', currentDateTime)
+        console.log('체크인시간', checkInTime)
+        console.log('현재시간', currentTime)
         // 예약 체크인 시간보다 현재 시간이 이후인 경우 (체크인 시간이 지난 경우)
-        if (currentDateTime > checkInTime) {
+        if (currentTime > checkInTime) {
             return res.status(400).json({ error: '체크인 시간이 지나 예약을 취소할 수 없습니다.' });
         }
 
@@ -302,35 +302,4 @@ export const getMyReservation = async (
     }
 };
 
-
-
-// 내 예약 조회
-// export const getMyReservation = async (
-//     req: Request,
-//     res: Response,
-//     next: NextFunction,
-// ) => {
-//     try {
-//         // 로그인된 사용자의 이메일 가져오기
-//         const userEmail = req.query.member_email;
-//         console.log(userEmail);
-
-//         // 전체 예약 조회
-//         const allReservationsQuery = `
-//             SELECT *
-//             FROM reservations
-//             WHERE member_email = ?
-//         `;
-
-//         const [reservationRows] = await con.promise().query<RowDataPacket[]>(allReservationsQuery, [
-//             userEmail,
-//         ]);
-//         const reservations: RowDataPacket[] = reservationRows;
-//         console.log(reservationRows);
-
-//         return res.status(200).json({ reservations });
-//     } catch (err) {
-//         console.error(err);
-//         return res.status(500).json({ error: 'Internal server error' });
-//     }
-// };
+// 다른 이메일로 예약정보 받기
