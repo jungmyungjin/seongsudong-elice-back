@@ -5,6 +5,8 @@ import express, { Request, Response, NextFunction } from 'express';
 
 import commentRouter from './src/routes/comment-routes';
 import memberRouter from './src/routes/member-routes';
+//import authRouter from './src/routes/auth-routes'
+import adminRouter from './src/routes/admin-routes';
 import postRouter from './src/routes/post-routes';
 import reservationRouter from './src/routes/reservaton-routes';
 
@@ -23,6 +25,16 @@ import {
 const app = express();
 
 const server = http.createServer(app);
+
+// socket.io 서버 생성 및 옵션 설정
+export const io = new Server(server, {
+  cors: {
+    origin: true, // 허용할 도메인
+    methods: ['GET', 'POST'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    credentials: true,
+  },
+});
 
 // 세션 설정
 const sessionConfig = {
@@ -49,6 +61,7 @@ app.use(
   }),
 );
 
+
 // Express 애플리케이션에 세션 미들웨어 추가
 app.use(session(sessionConfig));
 
@@ -61,24 +74,6 @@ app.get('/', (req: Request, res: Response, next: NextFunction) => {
 
 app.use('/uploads', express.static('uploads'));
 
-app.get('/auth/google', googleStrategy);
-app.get('/auth/google/callback', googleCallback, googleCallbackRedirect);
-
-app.use('/api/members', memberRouter);
-app.use('/api/comments', commentRouter);
-app.use('/api/posts', postRouter);
-app.use('/api/reservations', reservationRouter);
-
-// socket.io 서버 생성 및 옵션 설정
-export const io = new Server(server, {
-  cors: {
-    origin: true, // 허용할 도메인
-    methods: ['GET', 'POST'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
-    credentials: true,
-  },
-});
-
 app.listen(3000, () => {
   console.log('server on!');
 });
@@ -87,3 +82,13 @@ app.listen(3000, () => {
 server.listen(3001, () => {
   console.log(`Socket server on 3001 !!`);
 });
+
+app.get('/auth/google', googleStrategy);
+app.get('/auth/google/callback', googleCallback, googleCallbackRedirect);
+
+app.use('/api/members', memberRouter);
+app.use('/api/admin', adminRouter);
+app.use('/api/comments', commentRouter);
+app.use('/api/posts', postRouter);
+app.use('/api/reservations', reservationRouter);
+//app.use('/', authRouter);
