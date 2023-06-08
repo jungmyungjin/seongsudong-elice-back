@@ -7,7 +7,6 @@ import commentRouter from './src/routes/comment-routes';
 import memberRouter from './src/routes/member-routes';
 import postRouter from './src/routes/post-routes';
 import reservationRouter from './src/routes/reservaton-routes';
-import chatRouter from './src/routes/chat-routes';
 
 import session from 'express-session';
 import passport from 'passport';
@@ -24,17 +23,6 @@ import {
 const app = express();
 
 const server = http.createServer(app);
-
-// socket.io 서버 생성 및 옵션 설정
-export const io = new Server(server);
-// const io = new Server(server, {
-//   cors: {
-//     origin: allowedOrigins,
-//     methods: ['GET', 'POST'],
-//     allowedHeaders: ['Content-Type', 'Authorization'],
-//     credentials: true,
-//   },
-// });
 
 // 세션 설정
 const sessionConfig = {
@@ -80,7 +68,16 @@ app.use('/api/members', memberRouter);
 app.use('/api/comments', commentRouter);
 app.use('/api/posts', postRouter);
 app.use('/api/reservations', reservationRouter);
-app.use('/api/chat', chatRouter);
+
+// socket.io 서버 생성 및 옵션 설정
+export const io = new Server(server, {
+  cors: {
+    origin: true, // 허용할 도메인
+    methods: ['GET', 'POST'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    credentials: true,
+  },
+});
 
 app.listen(3000, () => {
   console.log('server on!');
@@ -89,14 +86,4 @@ app.listen(3000, () => {
 // socket.io 서버
 server.listen(3001, () => {
   console.log(`Socket server on 3001 !!`);
-});
-
-// socket.io 연결
-io.on('connection', socket => {
-  // 연결 됐을 때
-  console.log('a user connected');
-  // 연결 끊어졌을 때
-  socket.on('disconnect', () => {
-    console.log('user disconnected');
-  });
 });
