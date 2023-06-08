@@ -3,6 +3,8 @@ import { RowDataPacket } from 'mysql2/promise';
 import con from '../../connection';
 import { isAdmin, AuthenticatedRequest } from '../middlewares/isAdmin';
 import { v4 as uuidv4 } from 'uuid';
+import { sendEmail } from '../utils/send-email';
+
 
 // 좌석조회
 export const seatCheck = async (req: Request, res: Response): Promise<{ [seatNumber: string]: any } | Response> => {
@@ -85,7 +87,6 @@ export const createReservation = async (
             reservation_date,
             start_time,
             end_time,
-            num_of_guests,
             visitors,
             seat_number,
             seat_type
@@ -127,7 +128,6 @@ export const createReservation = async (
             return res.status(400).json({ error: '해당 좌석은 이미 예약된 좌석입니다.' });
         }
 
-
         // 예약 생성
         const reservation_id = uuidv4();
 
@@ -140,13 +140,12 @@ export const createReservation = async (
           reservation_date,
           start_time,
           end_time,
-          num_of_guests,
           visitors,
           seat_number,
           seat_type,
           status
         )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `;
 
         const createReservationParams = [
@@ -157,7 +156,6 @@ export const createReservation = async (
             reservation_date,
             start_time,
             end_time,
-            num_of_guests,
             visitors,
             seat_number,
             seat_type,
@@ -165,6 +163,12 @@ export const createReservation = async (
         ];
 
         await con.promise().query(createReservationQuery, createReservationParams);
+
+        // 이메일 보내기
+        const emailText = `성수동 엘리스를 이용해 주셔서 감사합니다. \n \n${member_name}님의 엘리스랩 예약이 아래와 같이 완료되었습니다.\n예약 ID: ${reservation_id} \n예약일자: ${reservation_date} ${start_time} ~ ${end_time} \n예약좌석: ${seat_type} ${seat_number}번 \n\n예약시간을 꼭 지켜주세요.`;
+        const emailSubject = '성수동 엘리스 예약이 완료되었습니다.';
+        const receiver = member_email;
+        sendEmail(receiver, emailSubject, emailText)
         // 예약 정보 조회
         const getReservationQuery = `
             SELECT *
@@ -181,12 +185,8 @@ export const createReservation = async (
     }
 };
 
-// 예약 취소(일반사용자)
-export const cancelReservation = async (
-    req: Request,
-    res: Response,
-    next: NextFunction
-) => {
+// 좌석조회
+export const seatCheck = async (req: Request, res: Response): Promise<{ [seatNumber: string]: any } | Response> => {
     try {
         const { reservationId, email } = req.body;
         console.log(reservationId)
@@ -241,7 +241,7 @@ export const cancelReservation = async (
 ) => {
     try {
         const { reservationId, email } = req.body;
-        console.log(reservationId)
+
         // 예약 정보 조회
         const getReservationQuery = `
             SELECT *
@@ -250,7 +250,7 @@ export const cancelReservation = async (
         `;
         const [reservationRows] = await con.promise().query<RowDataPacket[]>(getReservationQuery, [reservationId]);
         const reservation: RowDataPacket | undefined = (reservationRows as RowDataPacket[])[0];
-        console.log(reservationRows)
+
         // 예약이 존재하지 않을 경우
         if (!reservation || !reservationRows.length) {
             return res.status(404).json({ error: '예약을 찾을 수 없습니다.' });
@@ -260,8 +260,12 @@ export const cancelReservation = async (
         const isMyReservation = reservation.member_email === email;
 
         // 현재 날짜와 예약된 날짜 비교 
-        const currentDate = new Date();
-        const reservationDate = new Date(reservation.reservation_date);
+        // const currentDate = new Date();
+
+        // const reservationDate = new Date(reservation.reservation_date);
+        const currentDate = new Date().toLocaleDateString('en-US', { timeZone: 'Asia/Seoul' });
+        const reservationDate = new Date(reservation.reservation_date).toLocaleDateString('en-US', { timeZone: 'Asia/Seoul' });
+
         console.log(reservationDate)
         // 지난 예약인 경우
         if (reservationDate < currentDate) {
@@ -269,15 +273,15 @@ export const cancelReservation = async (
         }
 
         // 현재시간
-        const currentDateTime = new Date().toLocaleString('en-US', { timeZone: 'Asia/Seoul' });
-        console.log(currentDateTime);
+        const options = { timeZone: 'Asia/Seoul', hour12: false };
+        const currentTime = new Date().toLocaleTimeString('en-US', options);
 
         // 예약 체크인 시간
         const checkInTime = reservation.start_time;
-        console.log(checkInTime)
-        console.log('현재시간', currentDateTime)
+        console.log('체크인시간', checkInTime)
+        console.log('현재시간', currentTime)
         // 예약 체크인 시간보다 현재 시간이 이후인 경우 (체크인 시간이 지난 경우)
-        if (currentDateTime > checkInTime) {
+        if (currentTime > checkInTime) {
             return res.status(400).json({ error: '체크인 시간이 지나 예약을 취소할 수 없습니다.' });
         }
 
@@ -300,7 +304,6 @@ export const cancelReservation = async (
     }
 };
 
-
 // 내 예약 조회
 export const getMyReservation = async (
     req: Request,
@@ -309,7 +312,7 @@ export const getMyReservation = async (
 ) => {
     try {
         // 로그인된 사용자의 이메일 가져오기 (토큰조회방식)
-        //const userEmail = req.user.email;
+        //]const userEmail = req.user.email;
         const userEmail = req.query.member_email;
         console.log(userEmail)
 
@@ -348,3 +351,4 @@ export const getMyReservation = async (
     }
 };
 
+// 다른 이메일로 예약정보 받기

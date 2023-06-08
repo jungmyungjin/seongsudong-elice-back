@@ -2,7 +2,6 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 import express, { Request, Response, NextFunction } from 'express';
-
 import commentRouter from './src/routes/comment-routes';
 import memberRouter from './src/routes/member-routes';
 //import authRouter from './src/routes/auth-routes'
@@ -58,6 +57,7 @@ app.use(
     credentials: true,
     maxAge: 86400,
     optionsSuccessStatus: 200,
+    preflightContinue: true
   }),
 );
 
