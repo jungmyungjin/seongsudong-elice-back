@@ -152,6 +152,11 @@ export const getPost = async (
   try {
     const postId = req.params.postId;
 
+    // 조회수 증가
+    const incrementViewsQuery =
+      'UPDATE posts SET views = views +1 WHERE id = ?;';
+    await con.promise().query(incrementViewsQuery, [postId]);
+
     const getPostQuery =
       'SELECT id, category, title, images, description, created_at, views, email, name, generation, isAdmin FROM posts LEFT JOIN members ON posts.author_email = members.email WHERE id = ?;';
     const postResult = await con.promise().query(getPostQuery, [postId]);
@@ -246,29 +251,6 @@ export const removePost = async (
     const postResult = await con.promise().query(deletePostQuery, [postId]);
 
     return res.status(200).json({ result: 'Post deleted successfully' });
-  } catch (err) {
-    console.error(err);
-    return res.status(500).json({ error: 'Internal server error' });
-  }
-};
-
-// 게시물 조회수 증가
-export const countViews = async (
-  req: Request,
-  res: Response,
-  next: NextFunction,
-) => {
-  try {
-    const postId = req.params.postId;
-
-    const incrementViewsQuery = 'UPDATE posts SET views +1 WHERE id = ?;';
-    await con.promise().query(incrementViewsQuery, [postId]);
-
-    const updatedViewsQuery = 'SELECT id, views FROM posts WHERE id = ?;';
-    const [updatedViews] = await con
-      .promise()
-      .query(updatedViewsQuery, [postId]);
-    return res.status(201).json(updatedViews);
   } catch (err) {
     console.error(err);
     return res.status(500).json({ error: 'Internal server error' });
