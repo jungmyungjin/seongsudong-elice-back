@@ -1,7 +1,6 @@
 import express from 'express';
 import {
   createComment,
-  getComments,
   deleteComment,
   deleteCommentAdmin,
   updateComment,
@@ -9,10 +8,12 @@ import {
 
 const commentRouter = express.Router();
 
-commentRouter.get('/', getComments);
 commentRouter.post('/:postId', createComment);
-commentRouter.delete('/:postId', deleteComment);
-commentRouter.delete('/:postId/admin', deleteCommentAdmin);
+commentRouter.delete('/:postId/:commentId/:email', deleteComment); // DELETE는 body를 넣을 수 없다!
+commentRouter.delete(
+  '/admin/:postId/:commentId/:email/:isAdmin',
+  deleteCommentAdmin,
+); // DELETE는 body를 넣을 수 없다!
 commentRouter.patch('/:postId', updateComment);
 
 export default commentRouter;

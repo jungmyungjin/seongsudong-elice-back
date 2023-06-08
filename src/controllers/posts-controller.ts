@@ -35,10 +35,9 @@ export const getPostList = async (
 ) => {
   try {
     if (req.query.category) {
-      const query = req.query.category;
+      const category = req.query.category;
       // 카테고리별 게시물 조회
-      if (query === '공지게시판') {
-        const category = req.query.category;
+      if (category === '공지게시판') {
         const getNoticesQuery =
           'SELECT id, category, title, images, description, created_at, views, email, name, generation, isAdmin FROM posts LEFT JOIN members ON posts.author_email = members.email WHERE category = ? ORDER BY created_at DESC';
         const getResult = await con
@@ -46,8 +45,7 @@ export const getPostList = async (
           .query(getNoticesQuery, [category]);
         console.log(getResult[0]);
         return res.status(200).json(getResult[0]);
-      } else if (query === '자유게시판') {
-        const category = req.query.category;
+      } else if (category === '자유게시판') {
         const getPostsQuery =
           'SELECT id, category, title, images, description, created_at, views, email, name, generation, isAdmin FROM posts LEFT JOIN members ON posts.author_email = members.email WHERE category = ? ORDER BY created_at DESC';
         const getResult = await con.promise().query(getPostsQuery, [category]);
@@ -60,12 +58,10 @@ export const getPostList = async (
         'SELECT id, category, title, images, description, created_at, views, email, name, generation, isAdmin FROM posts LEFT JOIN members ON posts.author_email = members.email WHERE author_email = ? ORDER BY created_at DESC';
       const getResult = await con.promise().query(getMemberPostsQuery, [email]);
       return res.status(200).json(getResult[0]);
-    } else {
-      return res.status(400).json({ error: 'Invalid query' });
     }
   } catch (err) {
     console.error(err);
-    return res.status(500).json({ error: 'Internal server error' });
+    return res.status(400).json({ error: 'Query required' });
   }
 };
 
@@ -76,8 +72,8 @@ export const getRecentPosts = async (
   next: NextFunction,
 ) => {
   try {
-    if (req.query.category === '공지게시판') {
-      const category = req.query.category;
+    const category = req.query.category;
+    if (category === '공지게시판') {
       const getRecentPostsQuery =
         'SELECT id, category, title, images, description, created_at, views, email, name, generation, isAdmin FROM posts LEFT JOIN members ON posts.author_email = members.email WHERE category = ? ORDER BY created_at DESC LIMIT 0, 3;';
       const getResult = await con
@@ -100,8 +96,8 @@ export const getTopPosts = async (
   next: NextFunction,
 ) => {
   try {
-    if (req.query.category === '자유게시판') {
-      const category = req.query.category;
+    const category = req.query.category;
+    if (category === '자유게시판') {
       const getTopPostsQuery =
         'SELECT id, category, title, images, description, created_at, views, email, name, generation, isAdmin FROM posts LEFT JOIN members ON posts.author_email = members.email WHERE category = ? ORDER BY views DESC LIMIT 0, 3;';
       const topPosts = await con.promise().query(getTopPostsQuery, [category]);
@@ -156,13 +152,18 @@ export const getPost = async (
   try {
     const postId = req.params.postId;
 
+    // 조회수 증가
+    const incrementViewsQuery =
+      'UPDATE posts SET views = views +1 WHERE id = ?;';
+    await con.promise().query(incrementViewsQuery, [postId]);
+
     const getPostQuery =
       'SELECT id, category, title, images, description, created_at, views, email, name, generation, isAdmin FROM posts LEFT JOIN members ON posts.author_email = members.email WHERE id = ?;';
     const postResult = await con.promise().query(getPostQuery, [postId]);
     const postData = Array.isArray(postResult[0]) ? postResult[0][0] : null;
 
     const getCommentsQuery =
-      'SELECT * FROM comments WHERE post_id = ? ORDER BY created_at DESC;';
+      'SELECT * FROM comments JOIN members ON comments.author_email = members.email WHERE post_id = ? ORDER BY created_at DESC;';
     const commentsResult = await con
       .promise()
       .query(getCommentsQuery, [postId]);
@@ -186,13 +187,14 @@ export const editPost = async (
   next: NextFunction,
 ) => {
   try {
+    console.log(req.body);
     let imgPaths;
     let images;
 
-    if (req.files?.length !== 0) {
-      imgPaths =
-        Array.isArray(req.files) &&
-        req.files.map((file: UploadedFile) => `uploads/${file.filename}`);
+    if (Array.isArray(req.files) && req.files.length > 0) {
+      imgPaths = req.files.map(
+        (file: UploadedFile) => `uploads/${file.filename}`,
+      );
 
       images = JSON.stringify(imgPaths);
     }
@@ -201,8 +203,6 @@ export const editPost = async (
     const { title, description } = req.body;
 
     if (!images) {
-      console.log('run');
-
       const updatePostQuery = ` UPDATE posts SET title = ?, description = ? WHERE id = ${postId}`;
       const [updateResult] = await con
         .promise()
@@ -250,37 +250,7 @@ export const removePost = async (
     const deletePostQuery = 'DELETE FROM posts WHERE id = ?';
     const postResult = await con.promise().query(deletePostQuery, [postId]);
 
-    return res.status(204);
-  } catch (err) {
-    console.error(err);
-    return res.status(500).json({ error: 'Internal server error' });
-  }
-};
-
-// 게시물 조회수 증가
-export const countViews = async (
-  req: Request,
-  res: Response,
-  next: NextFunction,
-) => {
-  try {
-    const postId = req.params.postId;
-
-    const getRecentViewsQuery = 'SELECT id, views FROM posts WHERE id = ?;';
-    const recentViews = await con
-      .promise()
-      .query(getRecentViewsQuery, [postId]);
-    let views = (recentViews[0] as any)[0]?.views;
-    views += 1;
-
-    const incViewsQuery = 'UPDATE posts SET views = ? WHERE id = ?;';
-    const incResult = await con.promise().query(incViewsQuery, [views, postId]);
-
-    const updatedViewsQuery = 'SELECT id, views FROM posts WHERE id = ?;';
-    const [updatedViews] = await con
-      .promise()
-      .query(updatedViewsQuery, [postId]);
-    return res.status(201).json(updatedViews);
+    return res.status(200).json({ result: 'Post deleted successfully' });
   } catch (err) {
     console.error(err);
     return res.status(500).json({ error: 'Internal server error' });

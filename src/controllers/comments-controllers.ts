@@ -1,30 +1,8 @@
-// const Lecture = require('../models/Lecture');
-
-import { Request, Response, NextFunction, response } from 'express';
+import { Request, Response, NextFunction } from 'express';
 import { ResultSetHeader, RowDataPacket } from 'mysql2/promise';
 
 import con from '../../connection';
-
-// 작동 확인용 테스트 API
-export const getComments = async (
-  req: Request,
-  res: Response,
-  next: NextFunction,
-) => {
-  // API 및 쿼리문 작성
-  const sql = 'SELECT * FROM comments';
-
-  // 이 sql 문을 어떻게 실행하지?
-  con.query(sql, (err: any, result: any) => {
-    if (err) {
-      throw err;
-    }
-
-    console.log(result);
-    // res.status(200).json(result);
-    // res.json(result);
-  });
-};
+// import { checkUserExist } from '../validation/checkUserExist';
 
 // 특정 게시물에 댓글을 추가하는 함수
 export const createComment = async (
@@ -36,39 +14,57 @@ export const createComment = async (
   const email = req.body.email;
   const comment = req.body.comment;
 
-  // req에 필요한 데이터가 전부 들어왔는지 확인
-  if (!email || !comment) {
-    return res
-      .status(500)
-      .json({ message: '입력 정보가 부족합니다. 다시 한번 확인해주세요.' });
-  }
-
   // 로그인 확인
   if (!email) {
     return res.status(500).json({ message: '로그인 유저가 아닙니다.' });
   }
 
+  // req에 필요한 데이터가 전부 들어왔는지 확인(로그인 제외)
+  if (!comment) {
+    return res
+      .status(500)
+      .json({ message: '입력 정보가 부족합니다. 다시 한번 확인해주세요.' });
+  }
+
   // 존재하는 유저인지 확인
-  // select name from members where email = dfadfdfd // 이름 정보만.
-  // const searchUserQuery = `SELECT * FROM members WHERE email = ${email}`;
-  // const searchUserQuery = `SELECT * FROM members WHERE email = '(email)'`;
-  const searchUserQuery = `SELECT * FROM members WHERE email = (?)`;
+  const searchUserQuery = `SELECT * FROM members WHERE email = ?`;
 
   try {
-    await con.promise().query(searchUserQuery, email);
+    const [userData] = (await con
+      .promise()
+      .query(searchUserQuery, email)) as RowDataPacket[];
+
+    if (userData.length === 0) {
+      return res.status(500).json({ message: '등록된 회원이 아닙니다.' });
+    }
   } catch (err) {
-    res.status(500).json({ message: '등록된 회원이 아닙니다.' });
+    res.status(500).json({ message: '유저 조회 중 에러가 발생했습니다.' });
 
     throw new Error(`Error searching member: ${err}`);
   }
 
+  // checkUserExist(res, next, email);
+
+  // try {
+  //   checkUserExist(res, next, email);
+  // } catch (err) {
+  //   // throw new Error('에러에러에러에러');
+  //   return new Error('에러에러에러에러');
+  // }
+
   // 존재하는 게시물인지 확인
-  const searchPostQuery = `SELECT * FROM posts WHERE id = ${postId}`;
+  const searchPostQuery = 'SELECT * FROM posts WHERE id = ?';
 
   try {
-    await con.promise().query(searchPostQuery);
+    const [postData] = (await con
+      .promise()
+      .query(searchPostQuery, [postId])) as RowDataPacket[];
+
+    if (postData.length === 0) {
+      return res.status(500).json({ message: '존재하지 않는 게시물입니다.' });
+    }
   } catch (err) {
-    res.status(500).json({ message: '존재하지 않는 게시물입니다.' });
+    res.status(500).json({ message: '게시물 조회 중 에러가 발생했습니다.' });
 
     throw new Error(`Error searching post: ${err}`);
   }
@@ -92,18 +88,15 @@ export const createComment = async (
   }
 
   // 등록 데이터 반환
-  // 유저 데이터를 같이 반환해줘야함. 이름과 기수를 보여줘야하기 때문.
-  // const searchCreatedCommentQuery = `SELECT * FROM comments WHERE id = ${createdCommentId}`;
-  // const searchCreatedCommentQuery = `SELECT comment.*, members.name FROM comments JOIN members ON comments.author_email = members.email WHERE comments.id = ${createdCommentId}`;
   const searchCreatedCommentQuery = `SELECT comments.*, members.name, members.generation
   FROM comments 
   JOIN members ON comments.author_email = members.email 
-  WHERE comments.id = ${createdCommentId}`;
+  WHERE comments.id = ?`;
 
   try {
     const [result] = (await con
       .promise()
-      .query(searchCreatedCommentQuery)) as RowDataPacket[];
+      .query(searchCreatedCommentQuery, [createdCommentId])) as RowDataPacket[];
 
     res.status(201).json(result[0]);
   } catch (err) {
@@ -122,39 +115,51 @@ export const deleteComment = async (
   next: NextFunction,
 ) => {
   const postId = req.params.postId;
-  const email = req.body.email;
-  const commentId = req.body.commentId;
-
-  // req에 필요한 데이터가 전부 들어왔는지 확인
-  if (!email || !commentId) {
-    return res
-      .status(500)
-      .json({ message: '입력 정보가 부족합니다. 다시 한번 확인해주세요.' });
-  }
+  const commentId = req.params.commentId;
+  const email = req.params.email;
 
   // 로그인 확인
   if (!email) {
     return res.status(500).json({ message: '로그인 유저가 아닙니다.' });
   }
 
+  // req에 필요한 데이터가 전부 들어왔는지 확인(로그인 제외)
+  if (!commentId) {
+    return res
+      .status(500)
+      .json({ message: '입력 정보가 부족합니다. 다시 한번 확인해주세요.' });
+  }
+
   // 존재하는 유저인지 확인
-  const searchUserQuery = `SELECT * FROM members WHERE email = (?)`;
+  const searchUserQuery = `SELECT * FROM members WHERE email = ?`;
 
   try {
-    await con.promise().query(searchUserQuery, email);
+    const [userData] = (await con
+      .promise()
+      .query(searchUserQuery, email)) as RowDataPacket[];
+
+    if (userData.length === 0) {
+      return res.status(500).json({ message: '등록된 회원이 아닙니다.' });
+    }
   } catch (err) {
-    res.status(500).json({ message: '등록된 회원이 아닙니다.' });
+    res.status(500).json({ message: '유저 조회 중 에러가 발생했습니다.' });
 
     throw new Error(`Error searching member: ${err}`);
   }
 
   // 존재하는 게시물인지 확인
-  const searchPostQuery = `SELECT * FROM posts WHERE id = ${postId}`;
+  const searchPostQuery = `SELECT * FROM posts WHERE id = ?`;
 
   try {
-    await con.promise().query(searchPostQuery);
+    const [postData] = (await con
+      .promise()
+      .query(searchPostQuery, postId)) as RowDataPacket[];
+
+    if (postData.length === 0) {
+      return res.status(500).json({ message: '존재하지 않는 게시물입니다.' });
+    }
   } catch (err) {
-    res.status(500).json({ message: '존재하지 않는 게시물입니다.' });
+    res.status(500).json({ message: '게시물 조회 중 에러가 발생했습니다.' });
 
     throw new Error(`Error searching post: ${err}`);
   }
@@ -162,14 +167,20 @@ export const deleteComment = async (
   // 댓글 데이터 얻기
   let commentData;
 
-  const searchCommentQuery = `SELECT * FROM comments WHERE id = ${commentId}`;
+  const searchCommentQuery = `SELECT * FROM comments WHERE id = ?`;
 
   try {
     [commentData] = (await con
       .promise()
-      .query(searchCommentQuery)) as RowDataPacket[];
+      .query(searchCommentQuery, commentId)) as RowDataPacket[];
+
+    if (commentData.length === 0) {
+      return res.status(500).json({ message: '존재하지 않는 댓글입니다.' });
+    }
   } catch (err) {
-    res.status(500).json({ message: '댓글 데이터 조회 실패.' });
+    res
+      .status(500)
+      .json({ message: '댓글 데이터 조회 중 에러가 발생했습니다.' });
 
     throw new Error(`Error searching comment: ${err}`);
   }
@@ -180,10 +191,10 @@ export const deleteComment = async (
   }
 
   // 댓글 삭제
-  const deleteCommentQuery = `DELETE FROM comments WHERE id = ${commentId}`;
+  const deleteCommentQuery = `DELETE FROM comments WHERE id = ?`;
 
   try {
-    const [result] = await con.promise().query(deleteCommentQuery);
+    const [result] = await con.promise().query(deleteCommentQuery, commentId);
 
     const { affectedRows } = result as ResultSetHeader;
 
@@ -192,7 +203,6 @@ export const deleteComment = async (
       return res.status(200).json({
         message: '댓글 삭제가 성공하였습니다.',
       });
-      // return res.status(204).json(response);
     }
   } catch (err) {
     res.status(500).json({ message: '댓글 삭제 중 에러가 발생했습니다.' });
@@ -208,20 +218,13 @@ export const deleteCommentAdmin = async (
   next: NextFunction,
 ) => {
   const postId = req.params.postId;
-  const email = req.body.email;
-  const commentId = req.body.commentId;
-  const isAdmin = req.body.isAdmin;
+  const email = req.params.email;
+  const commentId = req.params.commentId;
+  const isAdmin = parseInt(req.params.isAdmin);
 
-  // 관리자 요청인지 확인 req.body.isAdmin 정보 확인
+  // 관리자 요청인지 확인 req.params.isAdmin 정보 확인
   if (!isAdmin) {
     return res.status(500).json({ message: '관리자가 아닙니다.' });
-  }
-
-  // req에 필요한 데이터가 전부 들어왔는지 확인
-  if (!commentId || !email) {
-    return res
-      .status(500)
-      .json({ message: '입력 정보가 부족합니다. 다시 한번 확인해주세요.' });
   }
 
   // 로그인 확인
@@ -229,55 +232,80 @@ export const deleteCommentAdmin = async (
     return res.status(500).json({ message: '로그인 유저가 아닙니다.' });
   }
 
+  // req에 필요한 데이터가 전부 들어왔는지 확인(로그인 제외)
+  if (!commentId) {
+    return res
+      .status(500)
+      .json({ message: '입력 정보가 부족합니다. 다시 한번 확인해주세요.' });
+  }
+
   // 존재하는 유저인지 확인
-  const searchUserQuery = `SELECT * FROM members WHERE email = (?)`;
+  const searchUserQuery = `SELECT * FROM members WHERE email = ?`;
 
   let userData;
 
   try {
-    const response = (await con
+    const [response] = (await con
       .promise()
       .query(searchUserQuery, email)) as RowDataPacket[];
 
+    if (response.length === 0) {
+      return res.status(500).json({ message: '등록된 회원이 아닙니다.' });
+    }
+
     userData = response[0];
   } catch (err) {
-    res.status(500).json({ message: '등록된 회원이 아닙니다.' });
+    res.status(500).json({ message: '유저 조회 중 에러가 발생했습니다.' });
 
     throw new Error(`Error searching member: ${err}`);
   }
 
   // 관리자 권한이 있는 유저인지 확인
-  if (userData[0].isAdmin !== isAdmin) {
+  if (userData.isAdmin !== isAdmin) {
     return res.status(500).json({ message: '관리자 권한이 없습니다.' });
   }
 
   // 존재하는 게시물인지 확인
-  const searchPostQuery = `SELECT * FROM posts WHERE id = ${postId}`;
+  const searchPostQuery = `SELECT * FROM posts WHERE id = ?`;
 
   try {
-    await con.promise().query(searchPostQuery);
+    const [postData] = (await con
+      .promise()
+      .query(searchPostQuery, postId)) as RowDataPacket[];
+
+    if (postData.length === 0) {
+      return res.status(500).json({ message: '존재하지 않는 게시물입니다.' });
+    }
   } catch (err) {
-    res.status(500).json({ message: '존재하지 않는 게시물입니다.' });
+    res.status(500).json({ message: '게시물 조회 중 에러가 발생했습니다.' });
 
     throw new Error(`Error searching post: ${err}`);
   }
 
   // 댓글 데이터 얻기
-  const searchCommentQuery = `SELECT * FROM comments WHERE id = ${commentId}`;
+  const searchCommentQuery = `SELECT * FROM comments WHERE id = ?`;
 
   try {
-    await con.promise().query(searchCommentQuery);
+    const [commentData] = (await con
+      .promise()
+      .query(searchCommentQuery, commentId)) as RowDataPacket[];
+
+    if (commentData.length === 0) {
+      return res.status(500).json({ message: '존재하지 않는 댓글입니다.' });
+    }
   } catch (err) {
-    res.status(500).json({ message: '댓글 데이터 조회 실패.' });
+    res
+      .status(500)
+      .json({ message: '댓글 데이터 조회 중 에러가 발생했습니다.' });
 
     throw new Error(`Error searching comment: ${err}`);
   }
 
   // 댓글 삭제
-  const deleteCommentQuery = `DELETE FROM comments WHERE id = ${commentId}`;
+  const deleteCommentQuery = `DELETE FROM comments WHERE id = ?`;
 
   try {
-    const [result] = await con.promise().query(deleteCommentQuery);
+    const [result] = await con.promise().query(deleteCommentQuery, commentId);
 
     const { affectedRows } = result as ResultSetHeader;
 
@@ -304,36 +332,48 @@ export const updateComment = async (
   const commentId = req.body.commentId;
   const updatedContent = req.body.updatedContent;
 
-  // req에 필요한 데이터가 전부 들어왔는지 확인
-  if (!email || !commentId || !updatedContent) {
-    return res
-      .status(500)
-      .json({ message: '입력 정보가 부족합니다. 다시 한번 확인해주세요.' });
-  }
-
   // 로그인 확인
   if (!email) {
     return res.status(500).json({ message: '로그인 유저가 아닙니다.' });
   }
 
+  // req에 필요한 데이터가 전부 들어왔는지 확인(로그인 제외)
+  if (!commentId || !updatedContent) {
+    return res
+      .status(500)
+      .json({ message: '입력 정보가 부족합니다. 다시 한번 확인해주세요.' });
+  }
+
   // 존재하는 유저인지 확인
-  const searchUserQuery = `SELECT * FROM members WHERE email = (?)`;
+  const searchUserQuery = `SELECT * FROM members WHERE email = ?`;
 
   try {
-    await con.promise().query(searchUserQuery, email);
+    const [userData] = (await con
+      .promise()
+      .query(searchUserQuery, email)) as RowDataPacket[];
+
+    if (userData.length === 0) {
+      return res.status(500).json({ message: '등록된 회원이 아닙니다.' });
+    }
   } catch (err) {
-    res.status(500).json({ message: '등록된 회원이 아닙니다.' });
+    res.status(500).json({ message: '유저 조회 중 에러가 발생했습니다.' });
 
     throw new Error(`Error searching member: ${err}`);
   }
 
   // 존재하는 게시물인지 확인
-  const searchPostQuery = `SELECT * FROM posts WHERE id = ${postId}`;
+  const searchPostQuery = `SELECT * FROM posts WHERE id = ?`;
 
   try {
-    await con.promise().query(searchPostQuery);
+    const [postData] = (await con
+      .promise()
+      .query(searchPostQuery, postId)) as RowDataPacket[];
+
+    if (postData.length === 0) {
+      return res.status(500).json({ message: '존재하지 않는 게시물입니다.' });
+    }
   } catch (err) {
-    res.status(500).json({ message: '존재하지 않는 게시물입니다.' });
+    res.status(500).json({ message: '게시물 조회 중 에러가 발생했습니다.' });
 
     throw new Error(`Error searching post: ${err}`);
   }
@@ -341,14 +381,20 @@ export const updateComment = async (
   // 존재하는 댓글인지 확인
   let commentData;
 
-  const getCommentQuery = `SELECT * FROM comments WHERE id = ${commentId}`;
+  const getCommentQuery = `SELECT * FROM comments WHERE id = ?`;
 
   try {
     [commentData] = (await con
       .promise()
-      .query(getCommentQuery)) as RowDataPacket[];
+      .query(getCommentQuery, commentId)) as RowDataPacket[];
+
+    if (commentData.length === 0) {
+      return res.status(500).json({ message: '존재하지 않는 댓글입니다.' });
+    }
   } catch (err) {
-    res.status(500).json({ message: '댓글 데이터 조회 실패.' });
+    res
+      .status(500)
+      .json({ message: '댓글 데이터 조회 중 에러가 발생했습니다.' });
 
     throw new Error(`Error matching author: ${err}`);
   }
@@ -360,12 +406,12 @@ export const updateComment = async (
 
   // 댓글 수정
   const updateCommentQuery = `UPDATE comments
-  SET content = '${updatedContent}'
-  WHERE id = ${commentId};
+  SET content = ?
+  WHERE id = ?;
   `;
 
   try {
-    await con.promise().query(updateCommentQuery);
+    await con.promise().query(updateCommentQuery, [updatedContent, commentId]);
   } catch (err) {
     res.status(500).json({ message: '댓글 수정 중 에러가 발생했습니다.' });
 
@@ -376,12 +422,12 @@ export const updateComment = async (
   const searchCreatedCommentQuery = `SELECT comments.*, members.name, members.generation
   FROM comments 
   JOIN members ON comments.author_email = members.email 
-  WHERE comments.id = ${commentId}`;
+  WHERE comments.id = ?`;
 
   try {
     const [result] = (await con
       .promise()
-      .query(searchCreatedCommentQuery)) as RowDataPacket[];
+      .query(searchCreatedCommentQuery, commentId)) as RowDataPacket[];
 
     res.status(200).json(result[0]);
   } catch (err) {

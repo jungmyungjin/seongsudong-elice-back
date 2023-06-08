@@ -12,6 +12,8 @@ import reservationRouter from './src/routes/reservaton-routes';
 import session from 'express-session';
 import passport from 'passport';
 import cors from 'cors';
+import http from 'http';
+import { Server } from 'socket.io';
 
 import {
   googleCallback,
@@ -20,7 +22,18 @@ import {
 } from './src/controllers/members-controllers';
 
 const app = express();
-app.use(express.json());
+
+const server = http.createServer(app);
+
+// socket.io 서버 생성 및 옵션 설정
+export const io = new Server(server, {
+  cors: {
+    origin: true, // 허용할 도메인
+    methods: ['GET', 'POST'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    credentials: true,
+  },
+});
 
 // 세션 설정
 const sessionConfig = {
@@ -32,6 +45,8 @@ const sessionConfig = {
     maxAge: 1000 * 60 * 60, // 세션 유효 기간 (예: 1시간)
   },
 };
+
+app.use(express.json());
 
 // cors
 app.use(
@@ -63,10 +78,14 @@ app.listen(3000, () => {
   console.log('server on!');
 });
 
+// socket.io 서버
+server.listen(3001, () => {
+  console.log(`Socket server on 3001 !!`);
+});
 
-// POST 요청 처리
-app.post('/auth/google', googleStrategy)
+app.get('/auth/google', googleStrategy);
 app.get('/auth/google/callback', googleCallback, googleCallbackRedirect);
+
 app.use('/api/members', memberRouter);
 app.use('/api/admin', adminRouter);
 app.use('/api/comments', commentRouter);
