@@ -37,31 +37,17 @@ const sessionConfig = {
 };
 
 // cors
-// app.use(
-//   cors({
-//     origin: true,
-//     methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE'],
-//     allowedHeaders: ['Content-Type', 'Authorization'],
-//     credentials: true,
-//     maxAge: 86400,
-//     optionsSuccessStatus: 200,
-//   }),
-// );
-app.use((req, res, next) => {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-
-  res.setHeader(
-    'Access-Control-Allow-Headers',
-    'Origin, X-Requested-With, Content-Type, Accept, Authorization',
-  );
-
-  res.setHeader(
-    'Access-Control-Allow-Methods',
-    'GET, POST, PATCH, DELETE, HEAD, PUT',
-  );
-
-  next();
-});
+app.use(
+  cors({
+    origin: true,
+    methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    credentials: true,
+    maxAge: 86400,
+    optionsSuccessStatus: 200,
+    preflightContinue: true
+  }),
+);
 
 
 // Express 애플리케이션에 세션 미들웨어 추가
@@ -85,7 +71,7 @@ app.use(bodyParser.json());
 
 
 // POST 요청 처리
-app.get('/auth/google', googleStrategy)
+app.post('/auth/google', googleStrategy)
 app.get('/auth/google/callback', googleCallback, googleCallbackRedirect);
 app.use('/api/members', memberRouter);
 app.use('/api/admin', adminRouter);

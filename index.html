@@ -46,14 +46,22 @@
     //       console.error('에러 발생:', error);
     //     });
     // }
+    // function googleLogin() {
+    //   // 구글 OAuth 인증 요청 매개변수
+    //   const params = new URLSearchParams({
+    //     response_type: 'code',
+    //     client_id: '176418337321-nlsk84qeitsk1d5r4ssl2indih8sea5t.apps.googleusercontent.com',
+    //     redirect_uri: 'YOUR_REDIRECT_URI',
+    //     scope: 'YOUR_SCOPES',
+    //   });
 
-    // function handleLoginResponse(response) {
-    //   if (response.ok) {
-    //     console.log('인증 코드 전송 성공');
-    //   } else {
-    //     console.error('인증 코드 전송 실패');
-    //   }
+    //   // 구글 로그인 URL
+    //   const googleLoginURL = `https://accounts.google.com/o/oauth2/auth?${params.toString()}`;
+
+    //   // 리디렉션
+    //   window.location.href = googleLoginURL;
     // }
+
     function logout() {
       fetch('/api/members/logout', { method: 'POST' })
         .then(response => {
@@ -68,6 +76,15 @@
         .catch(error => {
           console.error('에러 발생:', error);
         });
+    }
+
+
+    function handleLoginResponse(response) {
+      if (response.ok) {
+        console.log('인증 코드 전송 성공');
+      } else {
+        console.error('인증 코드 전송 실패');
+      }
     }
 
 

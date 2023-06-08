@@ -57,7 +57,7 @@ passport.use(
     {
       clientID: process.env.CLIENT_ID!,
       clientSecret: process.env.CLIENT_SECRET!,
-      callbackURL: process.env.CALLBACK_URL!,
+      callbackURL: '/auth/google/callback',
     },
     async (accessToken, refreshToken, profile, done) => {
       const { email } = profile._json;
@@ -213,14 +213,16 @@ export function googleStrategy(req: Request, res: Response, next: NextFunction) 
   } else {
     // 로그인 요청 처리
     console.log('로그인요청완료')
-    console.log(req.query)
-    passport.authenticate('google', { scope: ['email'] })(req, res, next);
+    console.log()
+    passport.authenticate('google', { scope: ['email', 'profile'] })(req, res, next);
 
   }
 }
 
 export function googleCallback(req: Request, res: Response, next: NextFunction) {
   passport.authenticate('google', { failureRedirect: '/' })(req, res, (err: Error) => {
+    const code = req.query.code
+    console.log(code)
     if (err) {
       console.error('Google OAuth 인증 실패:', err);
       return next(err);
@@ -249,6 +251,7 @@ export function googleCallbackRedirect(req: Request, res: Response) {
     res.redirect('/');
   } else {
     // 로그인 정보가 없을 경우
+    console.log('여기실행되나?')
     res.redirect('/register'); //cannot get register 떠도 멤버생성은 됨
   }
 }
