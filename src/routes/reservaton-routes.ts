@@ -7,6 +7,8 @@ import { sendEmail } from '../utils/send-email'
 const postRouter = express.Router();
 const router = express.Router();
 
+// 예약 생성
+router.post('/', createReservation);
 
 // 좌석 조회
 router.get('/seat-check', seatCheck);
