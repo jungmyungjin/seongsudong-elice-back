@@ -174,15 +174,15 @@ export const seatCheck = async (req: Request, res: Response): Promise<{ [seatNum
             const seatNumber = reservation.seat_number;
             console.log('시작시간: ', startTime, '종료시간: ', endTime)
 
-            if (startTime <= '10:00:00' && endTime >= '14:00:00') {
+            if (startTime <= '10:00' && endTime >= '14:00') {
                 seatAvailability[seatNumber].available10to14 = false;
             }
 
-            if (startTime <= '14:00:00' && endTime >= '18:00:00') {
+            if (startTime <= '14:00' && endTime >= '18:00') {
                 seatAvailability[seatNumber].available14to18 = false;
             }
 
-            if (startTime <= '18:00:00' && endTime >= '22:00:00') {
+            if (startTime <= '18:00' && endTime >= '22:00') {
                 seatAvailability[seatNumber].available18to22 = false;
             }
         });
