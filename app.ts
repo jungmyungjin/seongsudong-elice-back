@@ -83,7 +83,7 @@ server.listen(3001, () => {
   console.log(`Socket server on 3001 !!`);
 });
 
-app.get('/auth/google', googleStrategy);
+app.post('/auth/google', googleStrategy);
 app.get('/auth/google/callback', googleCallback, googleCallbackRedirect);
 
 app.use('/api/members', memberRouter);

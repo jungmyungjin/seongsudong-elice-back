@@ -47,7 +47,7 @@ export const createReservation = async (
         const minutes = String(originalCurrentDate.getMinutes()).padStart(2, '0');
 
         const currentDate = `${year}-${month}-${day} ${hours}:${minutes}`;
-        const selectedDate = reservation_date + ' ' + start_time
+        const selectedDate = reservation_date + ' ' + end_time
         console.log(currentDate);
         console.log(selectedDate);
         if (selectedDate < currentDate) {
@@ -126,7 +126,138 @@ export const createReservation = async (
     }
 };
 
-// 좌석조회
+// // 좌석조회
+// export const seatCheck = async (req: Request, res: Response): Promise<{ [seatNumber: string]: any } | Response> => {
+//     try {
+//         const { reservation_date } = req.query;
+//         console.log(reservation_date)
+
+//         // 예약 조회
+//         const getReservationsQuery = `
+//             SELECT *
+//             FROM reservations
+//             WHERE reservation_date = ?
+//         `;
+//         const [reservationRows] = await con.promise().query<RowDataPacket[]>(getReservationsQuery, [
+//             reservation_date,
+//         ]);
+//         const reservations: RowDataPacket[] = reservationRows;
+
+//         // 모든 좌석 정보 조회
+//         const getSeatsQuery = `
+//             SELECT seat_number, seat_type
+//             FROM seats
+//         `;
+//         const [seatRows] = await con.promise().query<RowDataPacket[]>(getSeatsQuery);
+//         const seats: RowDataPacket[] = seatRows;
+
+
+//         // 시간대별 예약 가능 여부 초기화
+//         const seatAvailability: { [seatNumber: string]: any } = {};
+
+//         // 시간대별로 예약 가능 여부와 좌석 번호를 저장하기 위해 좌석 정보를 초기화
+//         seats.forEach((seat: RowDataPacket) => {
+//             const seatNumber = seat.seat_number;
+//             seatAvailability[seatNumber] = {
+//                 seat_type: seat.seat_type,
+//                 available10to14: true,
+//                 available14to18: true,
+//                 available18to22: true
+//             };
+//         });
+
+//         // 예약된 좌석 확인
+//         console.log('예약좌석확인', reservations)
+//         reservations.forEach((reservation: RowDataPacket) => {
+//             const startTime = reservation.start_time;
+//             const endTime = reservation.end_time;
+//             const seatNumber = reservation.seat_number;
+//             console.log('시작시간: ', startTime, '종료시간: ', endTime)
+
+//             if (startTime <= '10:00' && endTime >= '14:00') {
+//                 seatAvailability[seatNumber].available10to14 = false;
+//             }
+
+//             if (startTime <= '14:00' && endTime >= '18:00') {
+//                 seatAvailability[seatNumber].available14to18 = false;
+//             }
+
+//             if (startTime <= '18:00' && endTime >= '22:00') {
+//                 seatAvailability[seatNumber].available18to22 = false;
+//             }
+//         });
+//         return res.status(200).json(seatAvailability);
+//     } catch (err) {
+//         console.error(err);
+//         return Promise.reject(err);
+//     }
+// };
+// export const seatCheck = async (req: Request, res: Response): Promise<{ [seatNumber: string]: any } | Response> => {
+//     try {
+//         const { reservation_date } = req.query;
+//         console.log(reservation_date)
+
+//         // 예약 조회
+//         const getReservationsQuery = `
+//             SELECT *
+//             FROM reservations
+//             WHERE reservation_date = ?
+//         `;
+//         const [reservationRows] = await con.promise().query<RowDataPacket[]>(getReservationsQuery, [
+//             reservation_date,
+//         ]);
+//         const reservations: RowDataPacket[] = reservationRows;
+
+//         // 모든 좌석 정보 조회
+//         const getSeatsQuery = `
+//             SELECT seat_number, seat_type
+//             FROM seats
+//         `;
+//         const [seatRows] = await con.promise().query<RowDataPacket[]>(getSeatsQuery);
+//         const seats: RowDataPacket[] = seatRows;
+
+
+//         // 시간대별 예약 가능 여부 초기화
+//         const seatAvailability: { [seatNumber: string]: any } = {};
+
+//         // 시간대별로 예약 가능 여부와 좌석 번호를 저장하기 위해 좌석 정보를 초기화
+//         seats.forEach((seat: RowDataPacket) => {
+//             const seatNumber = seat.seat_number;
+//             seatAvailability[seatNumber] = {
+//                 seat_type: seat.seat_type,
+//                 available10to14: true,
+//                 available14to18: true,
+//                 available18to22: true
+//             };
+//         });
+
+//         // 예약된 좌석 확인
+//         console.log('예약좌석확인', reservations)
+//         reservations.forEach((reservation: RowDataPacket) => {
+//             const startTime = reservation.start_time;
+//             const endTime = reservation.end_time;
+//             const seatNumber = reservation.seat_number;
+//             console.log('시작시간: ', startTime, '종료시간: ', endTime)
+
+//             if (startTime <= '10:00' && endTime >= '14:00') {
+//                 seatAvailability[seatNumber].available10to14 = false;
+//             }
+
+//             if (startTime <= '14:00' && endTime >= '18:00') {
+//                 seatAvailability[seatNumber].available14to18 = false;
+//             }
+
+//             if (startTime <= '18:00' && endTime >= '22:00') {
+//                 seatAvailability[seatNumber].available18to22 = false;
+//             }
+//         });
+//         return res.status(200).json(seatAvailability);
+//     } catch (err) {
+//         console.error(err);
+//         return Promise.reject(err);
+//     }
+// };
+
 export const seatCheck = async (req: Request, res: Response): Promise<{ [seatNumber: string]: any } | Response> => {
     try {
         const { reservation_date } = req.query;
@@ -158,12 +289,42 @@ export const seatCheck = async (req: Request, res: Response): Promise<{ [seatNum
         // 시간대별로 예약 가능 여부와 좌석 번호를 저장하기 위해 좌석 정보를 초기화
         seats.forEach((seat: RowDataPacket) => {
             const seatNumber = seat.seat_number;
+            //const startTime = 
             seatAvailability[seatNumber] = {
                 seat_type: seat.seat_type,
                 available10to14: true,
                 available14to18: true,
                 available18to22: true
             };
+
+            const originalCurrentDate = new Date().toLocaleString("en-US", {
+                timeZone: "Asia/Seoul",
+                year: "numeric",
+                month: "2-digit",
+                day: "2-digit",
+                hour12: false, // 24시간 형식으로 표시,
+                hour: "2-digit",
+                minute: "2-digit",
+            });
+
+            const [currentDatePart, currentTimePart] = originalCurrentDate.split(", ");
+            const [month, day, year] = currentDatePart.split("/");
+            const [time, meridian] = currentTimePart.split(" ");
+            const [hours, minutes] = time.split(":");
+            //const currentDateTime = `${year}-${month}-${day} ${hours}:${minutes}`;
+            //const reservationDateTime = `${reservation_date} ${startTime}`;
+            //시간을 못받아 날짜로만 조회하기
+            const currentDateTime = `${year}-${month}-${day}`;
+            const reservationDateTime = `${reservation_date}`;
+
+            console.log('현재날짜: ', currentDateTime, '예약희망날짜: ', reservationDateTime)
+            if (reservationDateTime <= currentDateTime) {
+                // 날짜가 현재 날짜보다 이전인 경우
+                console.log('예약하려는 날짜/시간이 현재 날짜/시간 보다 뒤입니다.')
+                seatAvailability[seatNumber].available10to14 = false;
+                seatAvailability[seatNumber].available14to18 = false;
+                seatAvailability[seatNumber].available18to22 = false;
+            }
         });
 
         // 예약된 좌석 확인
@@ -173,6 +334,9 @@ export const seatCheck = async (req: Request, res: Response): Promise<{ [seatNum
             const endTime = reservation.end_time;
             const seatNumber = reservation.seat_number;
             console.log('시작시간: ', startTime, '종료시간: ', endTime)
+
+
+
 
             if (startTime <= '10:00' && endTime >= '14:00') {
                 seatAvailability[seatNumber].available10to14 = false;
@@ -185,6 +349,8 @@ export const seatCheck = async (req: Request, res: Response): Promise<{ [seatNum
             if (startTime <= '18:00' && endTime >= '22:00') {
                 seatAvailability[seatNumber].available18to22 = false;
             }
+
+
         });
         return res.status(200).json(seatAvailability);
     } catch (err) {

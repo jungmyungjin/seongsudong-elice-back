@@ -212,10 +212,9 @@ export function googleStrategy(req: Request, res: Response, next: NextFunction) 
     console.log('이미 로그인한 사용자입니다.')
   } else {
     // 로그인 요청 처리
-    console.log('로그인요청완료')
-    console.log()
+    const { c: code, scope } = req.body;
     passport.authenticate('google', { scope: ['email', 'profile'] })(req, res, next);
-
+    //헤더 셋 (cors)확인해보기
   }
 }
 
@@ -248,11 +247,11 @@ export function googleCallback(req: Request, res: Response, next: NextFunction) 
 export function googleCallbackRedirect(req: Request, res: Response) {
   if (req.user) {
     // 로그인 정보가 있을 경우
-    res.redirect('/');
+    res.redirect('http://localhost:8000/');
   } else {
     // 로그인 정보가 없을 경우
     console.log('여기실행되나?')
-    res.redirect('/register'); //cannot get register 떠도 멤버생성은 됨
+    res.redirect('/'); //cannot get register 떠도 멤버생성은 됨
   }
 }
 
