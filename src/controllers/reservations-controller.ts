@@ -39,8 +39,17 @@ export const createReservation = async (
         }
 
         // 예약 가능 여부 확인
-        const currentDate = new Date();
-        const selectedDate = new Date(reservation_date);
+        const originalCurrentDate = new Date();
+        const year = originalCurrentDate.getFullYear();
+        const month = String(originalCurrentDate.getMonth() + 1).padStart(2, '0');
+        const day = String(originalCurrentDate.getDate()).padStart(2, '0');
+        const hours = String(originalCurrentDate.getHours()).padStart(2, '0');
+        const minutes = String(originalCurrentDate.getMinutes()).padStart(2, '0');
+
+        const currentDate = `${year}-${month}-${day} ${hours}:${minutes}`;
+        const selectedDate = reservation_date + ' ' + start_time
+        console.log(currentDate);
+        console.log(selectedDate);
         if (selectedDate < currentDate) {
             return res.status(400).json({ error: '지난 날짜로 예약을 생성할 수 없습니다.' });
         }
@@ -97,7 +106,7 @@ export const createReservation = async (
         await con.promise().query(createReservationQuery, createReservationParams);
 
         // 이메일 보내기
-        const emailText = `성수동 엘리스를 이용해 주셔서 감사합니다. \n \n${member_name}님의 엘리스랩 예약이 아래와 같이 완료되었습니다.\n예약 ID: ${reservation_id} \n예약일자: ${reservation_date} ${start_time} ~ ${end_time} \n예약좌석: ${seat_type} ${seat_number}번 \n\n예약시간을 꼭 지켜주세요.`;
+        const emailText = `성수동 엘리스를 이용해 주셔서 감사합니다. \n \n${member_name}님의 엘리스랩 예약이 아래와 같이 완료되었습니다.\n예약 ID: ${reservation_id} \n예약일자: ${reservation_date} ${start_time}~${end_time} \n예약좌석: ${seat_type} ${seat_number}번 \n\n예약시간을 꼭 지켜주세요.`;
         const emailSubject = '성수동 엘리스 예약이 완료되었습니다.';
         const receiver = member_email;
         sendEmail(receiver, emailSubject, emailText)
@@ -211,13 +220,15 @@ export const cancelReservation = async (
         const isMyReservation = reservation.member_email === email;
 
         // 현재 날짜와 예약된 날짜 비교 
-        // const currentDate = new Date();
+        const originalCurrentDate = new Date();
+        const year = originalCurrentDate.getFullYear();
+        const month = String(originalCurrentDate.getMonth() + 1).padStart(2, '0');
+        const day = String(originalCurrentDate.getDate()).padStart(2, '0');
 
-        // const reservationDate = new Date(reservation.reservation_date);
-        const currentDate = new Date().toLocaleDateString('en-US', { timeZone: 'Asia/Seoul' });
-        const reservationDate = new Date(reservation.reservation_date).toLocaleDateString('en-US', { timeZone: 'Asia/Seoul' });
-
-        console.log(reservationDate)
+        const currentDate = `${year}-${month}-${day}`;
+        const reservationDate = reservation.reservation_date
+        console.log(currentDate);
+        console.log(reservationDate);
         // 지난 예약인 경우
         if (reservationDate < currentDate) {
             return res.status(400).json({ error: '지난 예약은 취소할 수 없습니다.' });
@@ -228,7 +239,7 @@ export const cancelReservation = async (
         const currentTime = new Date().toLocaleTimeString('en-US', options);
 
         // 예약 체크인 시간
-        const checkInTime = reservation.start_time;
+        const checkInTime = reservation.start_time + ':00';
         console.log('체크인시간', checkInTime)
         console.log('현재시간', currentTime)
         // 예약 체크인 시간보다 현재 시간이 이후인 경우 (체크인 시간이 지난 경우)
