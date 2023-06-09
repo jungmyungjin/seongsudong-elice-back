@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import passport from 'passport';
-import { User } from '../controllers/members-controllers'
+import { User } from '../controllers/member2_controller'
 
 
 export const isAdmin = (req: Request, res: Response, next: NextFunction) => {

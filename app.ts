@@ -16,6 +16,7 @@ import passport from 'passport';
 import cors from 'cors';
 import http from 'http';
 import { Server } from 'socket.io';
+import { OAuth2Client } from 'google-auth-library';
 
 import {
   googleCallback,
@@ -24,6 +25,7 @@ import {
 } from './src/controllers/members-controllers';
 import { saveMessages, getAllMessages } from './src/utils/chat-utils';
 import con from './connection';
+import { googleCallback, googleLogin } from './src/controllers/member2_controller';
 
 const app = express();
 
@@ -61,6 +63,7 @@ app.use(
     credentials: true,
     maxAge: 86400,
     optionsSuccessStatus: 200,
+    preflightContinue: true
   }),
 );
 
@@ -85,8 +88,10 @@ server.listen(3002, () => {
   console.log(`Socket server on!!`);
 });
 
-app.get('/auth/google', googleStrategy);
-app.get('/auth/google/callback', googleCallback, googleCallbackRedirect);
+//app.post('/auth/google', googleStrategy);
+app.post('/auth/google', googleLogin);
+app.get('/auth/google/callback', googleCallback);
+
 
 app.use('/api/members', memberRouter);
 app.use('/api/admin', adminRouter);

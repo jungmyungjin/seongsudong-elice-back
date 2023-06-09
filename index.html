@@ -28,40 +28,39 @@
   <button id="cancelBtn">Cancel Reservation</button>
 
   <script>
+    // 기존 구글로그인 방법 (index.html)
     function googleLogin() {
-      const redirectUri = encodeURIComponent(window.location.href);
-      window.location.href = `/api/members/auth/google`;
+      window.location.href = "/api/members/auth/google";
     }
+    // 포스트 방식
+    // function googleLogin() {
+    //   fetch('/api/members/auth/google', {
+    //     method: 'POST',
+    //     headers: {
+    //       'Content-Type': 'application/json',
+    //     },
+    //     body: JSON.stringify({}),
+    //   })
+    //     .then(handleLoginResponse)
+    //     .catch(error => {
+    //       console.error('에러 발생:', error);
+    //     });
+    // }
+    // function googleLogin() {
+    //   // 구글 OAuth 인증 요청 매개변수
+    //   const params = new URLSearchParams({
+    //     response_type: 'code',
+    //     client_id: '176418337321-nlsk84qeitsk1d5r4ssl2indih8sea5t.apps.googleusercontent.com',
+    //     redirect_uri: 'YOUR_REDIRECT_URI',
+    //     scope: 'YOUR_SCOPES',
+    //   });
 
-    function handleLoginResponse(response) {
-      if (response.ok) {
-        console.log('인증 코드 전송 성공');
-      } else {
-        console.error('인증 코드 전송 실패');
-      }
-    }
+    //   // 구글 로그인 URL
+    //   const googleLoginURL = `https://accounts.google.com/o/oauth2/auth?${params.toString()}`;
 
-    function sendCodeToBackend(code) {
-      fetch('/api/members/auth/google', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ code }),
-      })
-        .then(handleLoginResponse)
-        .catch(error => {
-          console.error('에러 발생:', error);
-        });
-    }
-
-    // Google 로그인 후 인증 코드를 백엔드로 전송
-    const urlParams = new URLSearchParams(window.location.search);
-    const code = urlParams.get('code');
-
-    if (code) {
-      sendCodeToBackend(code);
-    }
+    //   // 리디렉션
+    //   window.location.href = googleLoginURL;
+    // }
 
     function logout() {
       fetch('/api/members/logout', { method: 'POST' })
@@ -78,6 +77,16 @@
           console.error('에러 발생:', error);
         });
     }
+
+
+    function handleLoginResponse(response) {
+      if (response.ok) {
+        console.log('인증 코드 전송 성공');
+      } else {
+        console.error('인증 코드 전송 실패');
+      }
+    }
+
 
     function getPosts() {
       fetch('/api/members/posts')

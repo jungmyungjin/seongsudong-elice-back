@@ -1,5 +1,5 @@
 import jwt, { VerifyErrors } from 'jsonwebtoken';
-import { User } from '../controllers/members-controllers';
+import { User } from '../controllers/member2_controller';
 
 const secretKey = process.env.JWT_SECRET_KEY;
 const expiresIn = '1h';
