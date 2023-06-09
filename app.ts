@@ -14,12 +14,9 @@ import passport from 'passport';
 import cors from 'cors';
 import http from 'http';
 import { Server } from 'socket.io';
+import { OAuth2Client } from 'google-auth-library';
 
-import {
-  googleCallback,
-  googleCallbackRedirect,
-  googleStrategy,
-} from './src/controllers/members-controllers';
+import { googleCallback, googleLogin } from './src/controllers/member2_controller';
 
 const app = express();
 
@@ -83,8 +80,10 @@ server.listen(3001, () => {
   console.log(`Socket server on 3001 !!`);
 });
 
-app.get('/auth/google', googleStrategy);
-app.get('/auth/google/callback', googleCallback, googleCallbackRedirect);
+//app.post('/auth/google', googleStrategy);
+app.post('/auth/google', googleLogin);
+app.get('/auth/google/callback', googleCallback);
+
 
 app.use('/api/members', memberRouter);
 app.use('/api/admin', adminRouter);
