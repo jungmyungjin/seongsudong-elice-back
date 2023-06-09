@@ -258,6 +258,7 @@ export const createReservation = async (
 //     }
 // };
 
+// 날짜+시간받아와서 하는 좌석조회
 export const seatCheck = async (req: Request, res: Response): Promise<{ [seatNumber: string]: any } | Response> => {
     try {
         const { reservation_date } = req.query;

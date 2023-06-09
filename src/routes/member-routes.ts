@@ -1,5 +1,5 @@
 import express, { Request, Response, NextFunction } from 'express';
-import { getMemberPosts, checkExistingUser, createUser, googleCallbackRedirect, logout, googleCallback, googleStrategy } from '../controllers/members-controllers';
+import { getMemberPosts, checkExistingUser, createUser, logout, googleCallback, googleLogin } from '../controllers/member2_controller';
 import { isAdmin } from '../middlewares/isAdmin'
 import passport from 'passport';
 
@@ -13,9 +13,9 @@ router.use(passport.session());
 //index.html 라우터(로컬)
 //router.get('/auth/google', googleStrategy);
 
-// Google OAuth 인증 요청 처리
-router.get('/auth/google', googleStrategy);
-router.get('/auth/google/callback', googleCallback, googleCallbackRedirect);
+// // Google OAuth 인증 요청 처리
+router.get('/auth/google', googleLogin);
+router.get('/auth/google/callback', googleCallback);
 router.post('/logout', logout);
 
 //기존유저인지조회
