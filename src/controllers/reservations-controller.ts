@@ -226,13 +226,7 @@ export const cancelReservation = async (
         const day = String(originalCurrentDate.getDate()).padStart(2, '0');
 
         const currentDate = `${year}-${month}-${day}`;
-        const reservationDate = reservation.reservation_date
-        console.log(currentDate);
-        console.log(reservationDate);
-        // 지난 예약인 경우
-        if (reservationDate < currentDate) {
-            return res.status(400).json({ error: '지난 예약은 취소할 수 없습니다.' });
-        }
+        const reservationDate = reservation.reservation_date;
 
         // 현재시간
         const options = { timeZone: 'Asia/Seoul', hour12: false };
@@ -240,11 +234,15 @@ export const cancelReservation = async (
 
         // 예약 체크인 시간
         const checkInTime = reservation.start_time + ':00';
-        console.log('체크인시간', checkInTime)
-        console.log('현재시간', currentTime)
-        // 예약 체크인 시간보다 현재 시간이 이후인 경우 (체크인 시간이 지난 경우)
-        if (currentTime > checkInTime) {
-            return res.status(400).json({ error: '체크인 시간이 지나 예약을 취소할 수 없습니다.' });
+
+        console.log('현재 날짜:', currentDate);
+        console.log('예약 날짜:', reservationDate);
+        console.log('현재 시간:', currentTime);
+        console.log('체크인 시간:', checkInTime);
+
+        // 예약 날짜와 현재 날짜, 체크인 시간과 현재 시간을 비교하여 처리
+        if (reservationDate < currentDate || (reservationDate === currentDate && currentTime > checkInTime)) {
+            return res.status(400).json({ error: '지난 예약은 취소할 수 없습니다.' });
         }
 
         // 일반 사용자는 자신의 예약만 삭제 가능
