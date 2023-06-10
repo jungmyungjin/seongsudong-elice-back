@@ -19,13 +19,11 @@ import { Server } from 'socket.io';
 import { OAuth2Client } from 'google-auth-library';
 
 import {
-  googleCallback,
-  googleCallbackRedirect,
-  googleStrategy,
-} from './src/controllers/members-controllers';
-import { saveMessages, getAllMessages } from './src/utils/chat-utils';
+  googleCallback
+} from './src/controllers/member2_controller';
+import { saveMessages, getAllMessages, getRoomId, getLatestMessage } from './src/utils/chat-utils';
 import con from './connection';
-import { googleCallback, googleLogin } from './src/controllers/member2_controller';
+import { googleLogin } from './src/controllers/member2_controller';
 
 const app = express();
 
@@ -107,18 +105,18 @@ io.on('connect', socket => {
   console.log('connected!!!');
 
   // 채팅방 생성 이벤트
-  socket.on('createChatRoom', async (email: string, messages: string) => {
+  socket.on('createChatRoom', async (email: string, message: string) => {
     // email에 해당하는 메세지 찾기
-    const checkChatRoomQuery = `SELECT * FROM chat_messages WHERE sender_email = ? LIMIT 1;`;
-    const checkResult = await con.promise().query(checkChatRoomQuery, [email]);
-    console.log(checkResult[0])
+    const checkChatRoomQuery = `SELECT room_id, sender_email, message, sentAt FROM chat_messages WHERE sender_email = ? LIMIT 1;`;
+    const [checkResult] = await con.promise().query(checkChatRoomQuery, [email]);
+    console.log(checkResult as RowDataPacket)
 
     let roomId;
   
-    if ((checkResult[0] as RowDataPacket).length > 0) {
+    if ((checkResult as RowDataPacket).length > 0) {
       // 첫 메세지가 아닐 경우, 결과에서 roomId 가져오기
-      roomId = (checkResult[0] as RowDataPacket).room_id;
-      console.log("It's first msg!");
+      roomId = (checkResult as RowDataPacket)[0].room_id;
+      console.log("It's not a first msg. Got roomId!");
     } else {
       // 첫 메세지일 경우, 채팅방 생성
       const createChatRoomQuery = `INSERT INTO chat_rooms (member_email) VALUES (?);`;
@@ -128,12 +126,35 @@ io.on('connect', socket => {
       console.log('ChatRoom created!') 
     }
 
+    // ROOM 입장
+    socket.join(roomId);
+    console.log(`Entered in ${roomId}!`);
+
+    // 해당 ROOM으로 메세지 전송
+    io.to(roomId).emit('')
+
     // 메세지 db 저장
-    await saveMessages(roomId, email, messages);
+    await saveMessages(roomId, email, message);
     console.log('Messages saved!');
 
-    // 해당 채팅방의 모든 메세지 전달
-    socket.emit('chatMessages', getAllMessages(roomId));
+    // 해당 ROOM의 모든 메세지 전달
+    io.to(roomId).emit('AllMessages', getAllMessages(roomId));
     console.log('Messages sent!');
   });
+
+  // 메세지 받고 주기 이벤트
+  socket.on('message', async (email: string, message: string) => {
+    // roomId 찾아오기
+    const roomId = await getRoomId(email);
+
+     // 메세지 db 저장
+     await saveMessages(roomId, email, message);
+     console.log('Messages saved!', message);
+
+     // 최신 메세지 전송
+    io.to(roomId).emit('message', await getLatestMessage(roomId))
+    console.log('sent message!');
+
+    io.to(roomId).emit('isUserOnline', ) //접속데이터리스트
+  })
 });
