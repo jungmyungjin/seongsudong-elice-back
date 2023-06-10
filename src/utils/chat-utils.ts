@@ -1,20 +1,26 @@
-//import express, { Request, Response, NextFunction } from 'express';
-//import { RowDataPacket } from 'mysql2';
+import { RowDataPacket } from 'mysql2';
 import con from '../../connection';
 
   // 메세지 db 저장 함수
   export const saveMessages = async (
     roomId: string,
     email: string,
-    messages: string,
+    message: string,
   ) => {
     try {
-        /* 현재 시간 한국시간으로 변환 로직 구현해야 함!(for sendAt) */
-      const sentAt = new Date();
+      // UTC 시간 -> KR 시간
+      const utcTime = new Date();
+      const koreanTime = new Date(utcTime + "Z");
+      koreanTime.setHours(koreanTime.getHours() + 9);
+      const formattedTime = `${koreanTime.toISOString().slice(0, 19).replace("T", " ")}`;
+      const sentAt = formattedTime;
+
+      const message = '되나?';
+
       const saveMessagesQuery = `INSERT INTO chat_messages (room_id, sender_email, message, sentAt) VALUES (?, ?, ?, ?);`;
       const saveMessagesResult = await con
         .promise()
-        .query(saveMessagesQuery, [roomId, email, messages, sentAt]);
+        .query(saveMessagesQuery, [roomId, email, message, sentAt]);
       return saveMessagesResult;
     } catch (err) {
       console.error('saveMessages 실행 중 에러 발생:', err);
@@ -22,7 +28,7 @@ import con from '../../connection';
   };
   
   // 모든 메세지 조회 함수
-  export const getAllMessages = async (roomId: string) => {
+  export const getAllMessages = async (roomId: number) => {
     const getAllMessagesQuery = `SELECT message_id, room_id, sender_email, message, sentAt, name, generation FROM chat_messages LEFT JOIN members ON chat_messages.sender_email = members.email WHERE room_id = ? ORDER BY sentAt DESC;`;
     const getAllMessagesResult = await con
       .promise()
@@ -30,4 +36,19 @@ import con from '../../connection';
 
     return getAllMessagesResult[0];
   };
+
+  // roomId 조회 함수
+  export const getRoomId = async (email: string) => {
+    const getRoomIdQuery = `SELECT room_id FROM chat_rooms WHERE member_email = ?;`;
+    const [getRoomIdResult] = await con.promise().query(getRoomIdQuery, [email]);
+    const roomId = (getRoomIdResult as RowDataPacket)[0].room_id;
+    return roomId;
+  }
   
+  // 최신 메세지 조회 함수
+  export const getLatestMessage = async (roomId: number) => {
+    const getLatestMessageQuery = `SELECT sender_email, name, generation, message, sentAt FROM chat_messages LEFT JOIN members ON chat_messages.sender_email = members.email WHERE chat_messages.room_id = ? AND chat_messages.sentAt = (SELECT MAX(sentAt) FROM chat_messages WHERE room_id = ?)`;
+    const [getLatestMessageResult] = await con.promise().query(getLatestMessageQuery, [roomId, roomId]);
+    console.log(getLatestMessageResult)
+    return getLatestMessageResult;
+  }
