@@ -8,7 +8,7 @@ export const getChatRoomList = async (
   res: Response,
   next: NextFunction,
 ) => {
-  const getChatRoomListQuery = `SELECT chat_rooms.room_id, members.member_email, members.member_name, members.generation, chat_messages.message, chat_messages.sentAt
+  const getChatRoomListQuery = `SELECT chat_rooms.room_id, members.email, members.name, members.generation, chat_messages.message, chat_messages.sentAt
   FROM chat_rooms
   JOIN members ON chat_rooms.members_email = members.email
   JOIN (
@@ -20,5 +20,5 @@ export const getChatRoomList = async (
   `;
   const getChatRoomListResult = await con.promise().query(getChatRoomListQuery);
 
-  return res.status(200).json(getChatRoomListResult);
+  return res.status(200).json(getChatRoomListResult[0]);
 };
