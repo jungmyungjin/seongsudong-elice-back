@@ -18,18 +18,27 @@ import http from 'http';
 import { Server } from 'socket.io';
 import { OAuth2Client } from 'google-auth-library';
 
-import {
-  googleCallback,
-  googleCallbackRedirect,
-  googleStrategy,
-} from './src/controllers/members-controllers';
+// import {
+//   googleCallback,
+//   googleCallbackRedirect,
+//   googleStrategy,
+// } from './src/controllers/members-controllers';
 import { saveMessages, getAllMessages } from './src/utils/chat-utils';
 import con from './connection';
-import { googleCallback, googleLogin } from './src/controllers/member2_controller';
+// import { googleCallback, googleLogin } from './src/controllers/member2_controller';
 
 const app = express();
 
 const server = http.createServer(app);
+
+app.use(function (req, res, next) {
+  res.header('Access-Control-Allow-Origin', req.headers.origin);
+  res.header(
+    'Access-Control-Allow-Headers',
+    'Origin, X-Requested-With, Content-Type, Accept',
+  );
+  next();
+});
 
 // socket.io 서버 생성 및 옵션 설정
 export const io = new Server(server, {
@@ -63,7 +72,7 @@ app.use(
     credentials: true,
     maxAge: 86400,
     optionsSuccessStatus: 200,
-    preflightContinue: true
+    preflightContinue: true,
   }),
 );
 
@@ -79,7 +88,7 @@ app.use(passport.session());
 
 app.use('/uploads', express.static('uploads'));
 
-app.listen(3000, () => {
+app.listen(5000, () => {
   console.log('server on!');
 });
 
@@ -89,9 +98,8 @@ server.listen(3002, () => {
 });
 
 //app.post('/auth/google', googleStrategy);
-app.post('/auth/google', googleLogin);
-app.get('/auth/google/callback', googleCallback);
-
+// app.post('/auth/google', googleLogin);
+// app.get('/auth/google/callback', googleCallback);
 
 app.use('/api/members', memberRouter);
 app.use('/api/admin', adminRouter);
@@ -100,7 +108,6 @@ app.use('/api/posts', postRouter);
 app.use('/api/reservations', reservationRouter);
 //app.use('/', authRouter);
 app.use('/api/chat', chatRouter);
-
 
 // socket.io 연결
 io.on('connect', socket => {
@@ -111,10 +118,10 @@ io.on('connect', socket => {
     // email에 해당하는 메세지 찾기
     const checkChatRoomQuery = `SELECT * FROM chat_messages WHERE sender_email = ? LIMIT 1;`;
     const checkResult = await con.promise().query(checkChatRoomQuery, [email]);
-    console.log(checkResult[0])
+    console.log(checkResult[0]);
 
     let roomId;
-  
+
     if ((checkResult[0] as RowDataPacket).length > 0) {
       // 첫 메세지가 아닐 경우, 결과에서 roomId 가져오기
       roomId = (checkResult[0] as RowDataPacket).room_id;
@@ -125,7 +132,7 @@ io.on('connect', socket => {
       const [result] = await con.promise().query(createChatRoomQuery, [email]);
       const newRoomId = (result as RowDataPacket).insertId;
       roomId = newRoomId;
-      console.log('ChatRoom created!') 
+      console.log('ChatRoom created!');
     }
 
     // 메세지 db 저장
