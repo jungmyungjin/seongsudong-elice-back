@@ -1,8 +1,8 @@
 import { Request, Response, NextFunction } from 'express';
 import { ResultSetHeader, RowDataPacket } from 'mysql2/promise';
+import { ExtendedRequest } from '../types/checkAuth';
 
 import con from '../../connection';
-// import { checkUserExist } from '../validation/checkUserExist';
 
 // 특정 게시물에 댓글을 추가하는 함수
 export const createComment = async (
@@ -11,8 +11,8 @@ export const createComment = async (
   next: NextFunction,
 ) => {
   const postId = req.params.postId;
-  const email = req.body.email;
   const comment = req.body.comment;
+  const email = (req as ExtendedRequest).user.email;
 
   // 로그인 확인
   if (!email) {
@@ -42,15 +42,6 @@ export const createComment = async (
 
     throw new Error(`Error searching member: ${err}`);
   }
-
-  // checkUserExist(res, next, email);
-
-  // try {
-  //   checkUserExist(res, next, email);
-  // } catch (err) {
-  //   // throw new Error('에러에러에러에러');
-  //   return new Error('에러에러에러에러');
-  // }
 
   // 존재하는 게시물인지 확인
   const searchPostQuery = 'SELECT * FROM posts WHERE id = ?';
@@ -116,7 +107,7 @@ export const deleteComment = async (
 ) => {
   const postId = req.params.postId;
   const commentId = req.params.commentId;
-  const email = req.params.email;
+  const email = (req as ExtendedRequest).user.email;
 
   // 로그인 확인
   if (!email) {
@@ -217,10 +208,14 @@ export const deleteCommentAdmin = async (
   res: Response,
   next: NextFunction,
 ) => {
+  if (!req.user) {
+    return;
+  }
+
   const postId = req.params.postId;
-  const email = req.params.email;
   const commentId = req.params.commentId;
-  const isAdmin = parseInt(req.params.isAdmin);
+  const email = (req as ExtendedRequest).user.email;
+  const isAdmin = (req as ExtendedRequest).user.isAdmin;
 
   // 관리자 요청인지 확인 req.params.isAdmin 정보 확인
   if (!isAdmin) {
@@ -328,9 +323,9 @@ export const updateComment = async (
   next: NextFunction,
 ) => {
   const postId = req.params.postId;
-  const email = req.body.email;
   const commentId = req.body.commentId;
   const updatedContent = req.body.updatedContent;
+  const email = (req as ExtendedRequest).user.email;
 
   // 로그인 확인
   if (!email) {

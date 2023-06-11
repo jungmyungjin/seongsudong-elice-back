@@ -26,19 +26,45 @@ import { OAuth2Client } from 'google-auth-library';
 import { saveMessages, getAllMessages } from './src/utils/chat-utils';
 import con from './connection';
 // import { googleCallback, googleLogin } from './src/controllers/member2_controller';
+const cookieParser = require('cookie-parser');
 
 const app = express();
 
+app.use(express.json());
+app.use(cookieParser());
+app.use(
+  cors({
+    // origin: true,
+    origin: 'http://localhost:3000',
+    credentials: true,
+    allowedHeaders: ['Origin', 'X-Requested-With', 'Content-Type', 'Accept'],
+    exposedHeaders: ['set-cookie'],
+  }),
+);
+app.use(
+  session({
+    secret: 'your-secret-key',
+    resave: false,
+    saveUninitialized: false,
+    // cookie: {
+    //   secure: false, // HTTPS가 아닌 경우 false로 설정
+    //   maxAge: 1000 * 60 * 60, // 세션 유효 기간 (예: 1시간)
+    // },
+  }),
+);
+
 const server = http.createServer(app);
 
-app.use(function (req, res, next) {
-  res.header('Access-Control-Allow-Origin', req.headers.origin);
-  res.header(
-    'Access-Control-Allow-Headers',
-    'Origin, X-Requested-With, Content-Type, Accept',
-  );
-  next();
-});
+// app.use(function (req, res, next) {
+//   // res.header('Access-Control-Allow-Origin', req.headers.origin);
+//   res.header('Access-Control-Allow-Origin', 'http://localhost:3000');
+//   res.header(
+//     'Access-Control-Allow-Headers',
+//     'Origin, X-Requested-With, Content-Type, Accept',
+//   );
+//   res.header('Access-Control-Allow-Credentials', 'true');
+//   next();
+// });
 
 // socket.io 서버 생성 및 옵션 설정
 export const io = new Server(server, {
@@ -50,37 +76,21 @@ export const io = new Server(server, {
   },
 });
 
-// 세션 설정
-const sessionConfig = {
-  secret: 'your-secret-key',
-  resave: false,
-  saveUninitialized: false,
-  cookie: {
-    secure: false, // HTTPS가 아닌 경우 false로 설정
-    maxAge: 1000 * 60 * 60, // 세션 유효 기간 (예: 1시간)
-  },
-};
-
-app.use(express.json());
-
 // cors
-app.use(
-  cors({
-    origin: true,
-    methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
-    credentials: true,
-    maxAge: 86400,
-    optionsSuccessStatus: 200,
-    preflightContinue: true,
-  }),
-);
+// app.use(
+//   cors({
+//     origin: true,
+//     methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE'],
+//     allowedHeaders: ['Content-Type', 'Authorization'],
+//     credentials: true,
+//     maxAge: 86400,
+//     optionsSuccessStatus: 200,
+//     preflightContinue: true,
+//   }),
+// );
 
-// Express 애플리케이션에 세션 미들웨어 추가
-app.use(session(sessionConfig));
-
-app.use(passport.initialize());
-app.use(passport.session());
+// app.use(passport.initialize());
+// app.use(passport.session());
 
 // app.get('/', (req: Request, res: Response, next: NextFunction) => {
 //   res.sendFile(__dirname + '/index.html');
