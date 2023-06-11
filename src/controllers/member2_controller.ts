@@ -257,7 +257,10 @@ export const loginUser = async (
     );
 
     res.cookie('elice_token', customJWT, {
-      httpOnly: true,
+      httpOnly: true, // document.cookie API로는 사용할 수 없게 만든다(true).
+      // maxAge: 900000,
+      secure: true, // 오직 HTTPS 연결에서만 사용할 수 있게 만든다(true)
+      sameSite: 'none', // 만약 sameSite를 None으로 사용한다면 반드시 secure를 true로 설정해야한다.
       //   secure: process.env.NODE_ENV === 'production', // Use secure cookies in production
       //   sameSite: 'strict', // Protect against CSRF attacks
     });
