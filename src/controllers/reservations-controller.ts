@@ -5,6 +5,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { sendEmail } from '../utils/send-email';
 
 
+
 // 예약 생성
 export const createReservation = async (
     req: Request,
@@ -458,7 +459,7 @@ export const getMyReservation = async (
             currentDate,
         ]);
         const pastReservations: RowDataPacket[] = pastReservationRows;
-        console.log(pastReservations)
+
         // 다가오는 예약 조회
         const upcomingReservationsQuery = `
             SELECT *
@@ -479,3 +480,34 @@ export const getMyReservation = async (
 };
 
 // 다른 이메일로 예약정보 받기
+export const sendEmailToUser = async (
+    req: Request,
+    res: Response
+) => {
+    const { email, reservationId } = req.body;
+    try {
+        // 예약 정보 조회
+        const getReservationQuery = `
+            SELECT *
+            FROM reservations
+            WHERE reservation_id = ? 
+        `;
+        const [reservationRows] = await con.promise().query<RowDataPacket[]>(getReservationQuery, [reservationId]);
+        const reservation: RowDataPacket | undefined = (reservationRows as RowDataPacket[])[0];
+
+        // 예약이 존재하지 않을 경우
+        if (!reservation || !reservationRows.length) {
+            return res.status(404).json({ error: '예약을 찾을 수 없습니다.' });
+        }
+        // 이메일 보내기
+        const emailText = `성수동 엘리스를 이용해 주셔서 감사합니다. \n \n${reservation.member_name}님의 엘리스랩 예약이 아래와 같이 완료되었습니다.\n예약 ID: ${reservation.reservation_id} \n예약일자: ${reservation.reservation_date} ${reservation.start_time}~${reservation.end_time} \n예약좌석: ${reservation.seat_type} ${reservation.seat_number}번 \n\n예약시간을 꼭 지켜주세요.`;
+        const emailSubject = '성수동 엘리스 예약이 완료되었습니다.';
+        const receiver = email;
+        sendEmail(receiver, emailSubject, emailText)
+        return res.status(200).json({ message: '메일 전송이 완료되었습니다.' });
+    }
+    catch (err) {
+        console.error(err);
+        return Promise.reject(err)
+    }
+};
