@@ -153,27 +153,23 @@ export async function checkExistingUser(email: string): Promise<any> {
 
 //로그아웃
 export function logout(req: Request, res: Response) {
-  // 세션을 제거하여 로그아웃 처리
-  req.session.destroy(err => {
-    if (err) {
-      console.error('Error while logging out:', err);
-    } else {
-      console.log('User logged out');
-    }
-    // 로그아웃 후 리다이렉트 또는 응답 처리
-
-    res.redirect('/'); // 로그아웃 후 리다이렉트할 경로
-  });
+  try {
+    // 쿠키 삭제 및 로그아웃 메시지 전달
+    return res
+      .clearCookie('elice_token', { path: '/', domain: 'localhost' })
+      .status(200)
+      .json({ message: '로그인이 완료되었습니다.' })
+      .end();
+  } catch (error) {
+    return Promise.reject(error);
+  }
 }
+
 
 //유저게시물조회
 export async function getMemberPosts(req: Request, res: Response) {
   const email = (req as ExtendedRequest).user.email;
 
-  // 로그인 확인
-  if (!email) {
-    return res.status(500).json({ message: '로그인이 필요한 기능입니다.' });
-  }
   try {
     const [rows] = await con.promise().query<RowDataPacket[]>(
       `

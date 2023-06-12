@@ -14,7 +14,7 @@ router.post('/login', loginUser);
 //회원가입
 router.post('/register', createUser);
 //로그아웃
-router.post('/logout', logout);
+router.post('/logout', logout); //checkAuth 필요?
 
 //기존유저인지조회
 router.get('/existuser-check', async (req: Request, res: Response) => {
