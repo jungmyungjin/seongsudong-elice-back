@@ -13,7 +13,7 @@ module.exports = (req, res, next) => {
     const decodedToken = jwt.verify(token, process.env.JWT_SECRET_KEY);
 
     // 이메일 검증으로 로그인 여부 체크
-    if (!decodedToken.email) {
+    if (!decodedToken) {
       throw new Error('로그인 유저가 아닙니다.');
     }
 
