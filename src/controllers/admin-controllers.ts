@@ -10,18 +10,18 @@ export const getUserReservations = async (req: Request, res: Response, next: Nex
         const { date } = req.params;
         console.log('date', date)
         // 예약 조회 전에 미들웨어 사용 - isAdmin
-        isAdmin(req, res, async () => {
-            // 사용자가 관리자인 경우, 예약을 조회합니다.
-            const getReservationsQuery = `
+        // isAdmin(req, res, async () => {
+        // 사용자가 관리자인 경우, 예약을 조회합니다.
+        const getReservationsQuery = `
             SELECT *
             FROM reservations
             WHERE reservation_date = ?
             `;
-            const [reservationRows] = await con.promise().query<RowDataPacket[]>(getReservationsQuery, [date]);
-            const reservations = reservationRows as RowDataPacket[];
-            console.log(reservations)
-            return res.status(200).json({ reservations });
-        });
+        const [reservationRows] = await con.promise().query<RowDataPacket[]>(getReservationsQuery, [date]);
+        const reservations = reservationRows as RowDataPacket[];
+        console.log(reservations)
+        return res.status(200).json({ reservations });
+        //});
     } catch (err) {
         console.error(err);
         return res.status(500).json({ error: '내부 서버 오류' });

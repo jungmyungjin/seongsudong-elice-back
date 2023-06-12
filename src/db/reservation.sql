@@ -4,7 +4,7 @@ CREATE TABLE
         member_generation VARCHAR(50) NOT NULL,
         member_name VARCHAR(50) NOT NULL,
         member_email VARCHAR(255) NOT NULL,
-        reservation_date DATE NOT NULL,
+        reservation_date VARCHAR(50) NOT NULL,
         start_time VARCHAR(50) NOT NULL,
         end_time VARCHAR(50) NOT NULL,
         visitors VARCHAR(255) DEFAULT '',
