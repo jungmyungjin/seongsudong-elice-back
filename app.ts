@@ -21,7 +21,7 @@ import { OAuth2Client } from 'google-auth-library';
 import {
   googleCallback
 } from './src/controllers/member2_controller';
-import { saveMessages, getAllMessages, getRoomId, getLatestMessage } from './src/utils/chat-utils';
+import { saveMessages, getAllMessages, getRoomId, getLatestMessage, getAllConnectionData } from './src/utils/chat-utils';
 import con from './connection';
 import { googleLogin } from './src/controllers/member2_controller';
 
@@ -104,57 +104,82 @@ app.use('/api/chat', chatRouter);
 io.on('connect', socket => {
   console.log('connected!!!');
 
-  // 채팅방 생성 이벤트
-  socket.on('createChatRoom', async (email: string, message: string) => {
+  let currentRoomId: any;
+
+  // 채팅방 입장: 해당 채팅방의 모든 메세지 가져오기
+  socket.on('enterChatRoom', async (member_email: string) => {
+    // roomId 찾아오기
+    const roomId = await getRoomId(member_email);
+
+    if (currentRoomId) {
+      socket.leave(currentRoomId);
+      console.log(`Left room ${currentRoomId}`);
+    }
+
+    // 해당 방의 모든 메세지 가져오기
+    const allMessages = await getAllMessages(roomId);
+    console.log(allMessages);
+
+    // 가져온 메세지를 클라이언트로 전송
+    socket.emit('AllMessages', allMessages);
+  });
+
+  // 채팅방 생성
+  socket.on('createChatRoom', async (member_email: string, message: string) => {
     // email에 해당하는 메세지 찾기
     const checkChatRoomQuery = `SELECT room_id, sender_email, message, sentAt FROM chat_messages WHERE sender_email = ? LIMIT 1;`;
-    const [checkResult] = await con.promise().query(checkChatRoomQuery, [email]);
-    console.log(checkResult as RowDataPacket)
+    const [checkResult] = await con.promise().query(checkChatRoomQuery, [member_email]);
 
     let roomId;
   
     if ((checkResult as RowDataPacket).length > 0) {
       // 첫 메세지가 아닐 경우, 결과에서 roomId 가져오기
       roomId = (checkResult as RowDataPacket)[0].room_id;
-      console.log("It's not a first msg. Got roomId!");
+      console.log("It's not the first msg. Got roomId!");
     } else {
       // 첫 메세지일 경우, 채팅방 생성
       const createChatRoomQuery = `INSERT INTO chat_rooms (member_email) VALUES (?);`;
-      const [result] = await con.promise().query(createChatRoomQuery, [email]);
+      const [result] = await con.promise().query(createChatRoomQuery, [member_email]);
       const newRoomId = (result as RowDataPacket).insertId;
       roomId = newRoomId;
       console.log('ChatRoom created!') 
+
+      // ROOM 입장
+      socket.join(roomId);
+      currentRoomId = roomId;
+      console.log(`Entered in ${roomId}!`);
     }
 
-    // ROOM 입장
-    socket.join(roomId);
-    console.log(`Entered in ${roomId}!`);
-
-    // 해당 ROOM으로 메세지 전송
-    io.to(roomId).emit('')
-
     // 메세지 db 저장
-    await saveMessages(roomId, email, message);
-    console.log('Messages saved!');
+    await saveMessages(roomId, member_email, message);
 
     // 해당 ROOM의 모든 메세지 전달
-    io.to(roomId).emit('AllMessages', getAllMessages(roomId));
-    console.log('Messages sent!');
+    const allMessages = await getAllMessages(roomId);
+    socket.emit('AllMessages', allMessages);
+    console.log(allMessages);
   });
 
   // 메세지 받고 주기 이벤트
-  socket.on('message', async (email: string, message: string) => {
+  socket.on('message', async (member_email: string, sender_email: string, message: string) => {
+    // 소켓이 room 안에 있는지 확인
+    if (!currentRoomId) {
+      console.log("Socket is not in any room. Cannot send message.");
+      return;
+    }
+
     // roomId 찾아오기
-    const roomId = await getRoomId(email);
+    const roomId = await getRoomId(member_email);
 
-     // 메세지 db 저장
-     await saveMessages(roomId, email, message);
-     console.log('Messages saved!', message);
+    // 메세지 db 저장
+    await saveMessages(roomId, sender_email, message);
+    console.log('Messages saved!', message);
 
-     // 최신 메세지 전송
-    io.to(roomId).emit('message', await getLatestMessage(roomId))
-    console.log('sent message!');
+    // 최신 메세지 전송
+    const latestMessage = await getLatestMessage(roomId);
+    socket.emit('message', latestMessage);
 
-    io.to(roomId).emit('isUserOnline', ) //접속데이터리스트
+    // 접속 유저 리스트 전송
+    const connectionData = await getAllConnectionData();
+    socket.emit('isOnline', connectionData);
   })
 });
