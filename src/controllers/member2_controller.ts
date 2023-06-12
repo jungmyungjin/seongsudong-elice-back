@@ -158,7 +158,7 @@ export function logout(req: Request, res: Response) {
     return res
       .clearCookie('elice_token', { path: '/', domain: 'localhost' })
       .status(200)
-      .json({ message: '로그인이 완료되었습니다.' })
+      .json({ message: '로그아웃이 완료되었습니다.' })
       .end();
   } catch (error) {
     return Promise.reject(error);
