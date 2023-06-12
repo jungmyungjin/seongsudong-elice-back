@@ -12,12 +12,8 @@ export const createReservation = async (
     res: Response,
     next: NextFunction
 ) => {
-    const email = (req as ExtendedRequest).user.email;
+    //const email = (req as ExtendedRequest).user.email;
 
-    // 로그인 확인
-    if (!email) {
-        return res.status(500).json({ message: '로그인이 필요한 기능입니다.' });
-    }
     try {
         const {
             member_generation,
@@ -448,16 +444,14 @@ export const getMyReservation = async (
     next: NextFunction,
 ) => {
     try {
+        //토큰이메일
         const email = (req as ExtendedRequest).user.email;
-
-        // 로그인 확인
-        if (!email) {
-            return res.status(500).json({ message: '로그인이 필요한 기능입니다.' });
-        }
-        // 로그인된 사용자의 이메일 가져오기 (토큰조회방식)
-        //]const userEmail = req.user.email;
+        //쿼리이메일
         const userEmail = req.query.member_email;
-        console.log(userEmail)
+        if (email !== userEmail) {
+            throw new Error('내 예약만 조회할 수 있습니다.');
+        }
+        console.log('userEmail: ', userEmail, 'email: ', email)
 
         // 현재 날짜 및 시간
         const currentDate = new Date();
@@ -474,7 +468,7 @@ export const getMyReservation = async (
             currentDate,
         ]);
         const pastReservations: RowDataPacket[] = pastReservationRows;
-        console.log(pastReservations)
+
         // 다가오는 예약 조회
         const upcomingReservationsQuery = `
             SELECT *
@@ -499,7 +493,6 @@ export const sendEmailToUser = async (
     req: Request,
     res: Response
 ) => {
-    //const email = (req as ExtendedRequest).user.email;
     const newEmail = req.body.email;
     const reservationId = req.body.reservationId;
 
