@@ -5,6 +5,7 @@ import {
   createUser,
   logout,
   loginUser,
+  deleteMember,
 } from '../controllers/member2_controller';
 const checkAuth = require('../middlewares/check-auth');
 const router = express.Router();
@@ -28,8 +29,11 @@ router.get('/existuser-check', async (req: Request, res: Response) => {
   }
 });
 
-//멤버게시물조회
+//유저게시물조회
 router.get('/posts', checkAuth, getMemberPosts);
+
+//유저탈퇴
+router.post('/delete', checkAuth, deleteMember);
 
 
 
