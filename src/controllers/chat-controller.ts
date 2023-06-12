@@ -10,13 +10,13 @@ export const getChatRoomList = async (
 ) => {
   const getChatRoomListQuery = `SELECT chat_rooms.room_id, members.email, members.name, members.generation, chat_messages.message, chat_messages.sentAt
   FROM chat_rooms
-  JOIN members ON chat_rooms.members_email = members.email
+  JOIN members ON chat_rooms.member_email = members.email
   JOIN (
       SELECT room_id, MAX(sentAt) AS latest_message_date
       FROM chat_messages
       GROUP BY room_id
   ) AS latest_messages ON chat_rooms.room_id = latest_messages.room_id
-  JOIN chat_messages ON latest_messages.room_id = chat_messages.room_id AND latest_messages.latest_message_date = chat_messages.sentAt ORDER BY chat_messages.sendAt DESC;
+  JOIN chat_messages ON latest_messages.room_id = chat_messages.room_id AND latest_messages.latest_message_date = chat_messages.sentAt ORDER BY chat_messages.sentAt DESC;
   `;
   const getChatRoomListResult = await con.promise().query(getChatRoomListQuery);
 
