@@ -94,11 +94,16 @@ export const saveMessages = async (
       }
 
       // UTC 시간 -> KR 시간
-      const utcTime = new Date();
-      const koreanTime = new Date(utcTime + "Z");
-      koreanTime.setHours(koreanTime.getHours() + 9);
-      const formattedTime = `${koreanTime.toISOString().slice(0, 19).replace("T", " ")}`;
-      const sentAt = formattedTime;
+      const date = new Date();
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      const hours = String(date.getHours()).padStart(2, '0');
+      const minutes = String(date.getMinutes()).padStart(2, '0');
+      const seconds = String(date.getSeconds()).padStart(2, '0');
+      
+      const formattedDate = `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+      const sentAt = formattedDate;
 
       const saveMessagesQuery = `
         INSERT INTO chat_messages (room_id, sender_email, message, sentAt) 
