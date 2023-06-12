@@ -8,6 +8,7 @@ import adminRouter from './src/routes/admin-routes';
 import postRouter from './src/routes/post-routes';
 import reservationRouter from './src/routes/reservaton-routes';
 import chatRouter from './src/routes/chat-routes';
+import accessRouter from './src/routes/access-routes';
 
 import express from 'express';
 import session from 'express-session';
@@ -118,6 +119,7 @@ app.use('/api/posts', postRouter);
 app.use('/api/reservations', reservationRouter);
 //app.use('/', authRouter);
 app.use('/api/chat', chatRouter);
+app.use('/api/access', accessRouter);
 
 // socket.io 연결
 io.on('connect', socket => {
