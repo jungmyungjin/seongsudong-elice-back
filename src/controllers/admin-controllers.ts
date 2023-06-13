@@ -1,5 +1,4 @@
 import { Request, Response, NextFunction } from 'express';
-import { isAdmin } from '../middlewares/isAdmin';
 import { RowDataPacket } from 'mysql2/promise';
 import con from '../../connection';
 import { ExtendedRequest } from '../types/checkAuth';
