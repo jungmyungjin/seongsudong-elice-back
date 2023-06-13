@@ -1,6 +1,4 @@
 import express, { Request, Response, NextFunction } from 'express';
-import { isAdmin } from '../middlewares/isAdmin'
-import passport from 'passport';
 import { getUserReservations, cancelReservationByAdmin } from '../controllers/admin-controllers';
 import { ExtendedRequest } from '../types/checkAuth';
 const checkAuth = require('../middlewares/check-auth');
