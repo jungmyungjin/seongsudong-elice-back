@@ -276,8 +276,8 @@ export const removePost = async (
       .promise()
       .query(checkWriterQuery, postId)) as RowDataPacket[];
 
-    // 작성자도 아니고 관리자도 아니라면 권한이 없다.
-    if (response[0].author_email !== email && !isAdmin) {
+    // 작성자가 아니거나 관리자가 아니라면 권한이 없다.
+    if (response[0].author_email !== email || !isAdmin) {
       return res.status(403).json({ message: '게시물 삭제 권한이 없습니다.' });
     }
   } catch (err) {
