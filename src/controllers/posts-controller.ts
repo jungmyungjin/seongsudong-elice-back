@@ -119,6 +119,7 @@ export const writePost = async (
   next: NextFunction,
 ) => {
   const isAdmin = (req as ExtendedRequest).user.isAdmin;
+  const email = (req as ExtendedRequest).user.email;
 
   try {
     const imgPaths = Array.isArray(req.files)
@@ -126,7 +127,7 @@ export const writePost = async (
       : [];
     const images = JSON.stringify(imgPaths);
 
-    const { author_email: email, category, title, description } = req.body;
+    const { category, title, description } = req.body;
 
     if (!isAdmin && category === '공지게시판') {
       return res.status(401).json({ message: '게시판 사용 권한이 없습니다.' });
