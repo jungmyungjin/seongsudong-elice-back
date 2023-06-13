@@ -14,12 +14,7 @@ export const createComment = async (
   const comment = req.body.comment;
   const email = (req as ExtendedRequest).user.email;
 
-  // 로그인 확인
-  if (!email) {
-    return res.status(500).json({ message: '로그인 유저가 아닙니다.' });
-  }
-
-  // req에 필요한 데이터가 전부 들어왔는지 확인(로그인 제외)
+  // req에 필요한 데이터가 전부 들어왔는지 확인
   if (!comment) {
     return res
       .status(500)
@@ -109,12 +104,7 @@ export const deleteComment = async (
   const commentId = req.params.commentId;
   const email = (req as ExtendedRequest).user.email;
 
-  // 로그인 확인
-  if (!email) {
-    return res.status(500).json({ message: '로그인 유저가 아닙니다.' });
-  }
-
-  // req에 필요한 데이터가 전부 들어왔는지 확인(로그인 제외)
+  // req에 필요한 데이터가 전부 들어왔는지 확인
   if (!commentId) {
     return res
       .status(500)
@@ -222,12 +212,7 @@ export const deleteCommentAdmin = async (
     return res.status(500).json({ message: '관리자가 아닙니다.' });
   }
 
-  // 로그인 확인
-  if (!email) {
-    return res.status(500).json({ message: '로그인 유저가 아닙니다.' });
-  }
-
-  // req에 필요한 데이터가 전부 들어왔는지 확인(로그인 제외)
+  // req에 필요한 데이터가 전부 들어왔는지 확인
   if (!commentId) {
     return res
       .status(500)
@@ -327,12 +312,7 @@ export const updateComment = async (
   const updatedContent = req.body.updatedContent;
   const email = (req as ExtendedRequest).user.email;
 
-  // 로그인 확인
-  if (!email) {
-    return res.status(500).json({ message: '로그인 유저가 아닙니다.' });
-  }
-
-  // req에 필요한 데이터가 전부 들어왔는지 확인(로그인 제외)
+  // req에 필요한 데이터가 전부 들어왔는지 확인
   if (!commentId || !updatedContent) {
     return res
       .status(500)

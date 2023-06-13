@@ -4,7 +4,6 @@ import { RowDataPacket } from 'mysql2/promise';
 import con from '../../connection';
 import { ExtendedRequest } from '../types/checkAuth';
 
-
 //관리자 날짜별 예약정보 조회
 export const getUserReservations = async (req: Request, res: Response, next: NextFunction) => {
     // 사용자를 쿠키에서 확인한 후, 관리자인 경우 예약을 조회
