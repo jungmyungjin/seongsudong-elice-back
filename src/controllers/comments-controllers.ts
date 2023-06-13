@@ -1,8 +1,8 @@
 import { Request, Response, NextFunction } from 'express';
 import { ResultSetHeader, RowDataPacket } from 'mysql2/promise';
+import { ExtendedRequest } from '../types/checkAuth';
 
 import con from '../../connection';
-// import { checkUserExist } from '../validation/checkUserExist';
 
 // 특정 게시물에 댓글을 추가하는 함수
 export const createComment = async (
@@ -11,15 +11,10 @@ export const createComment = async (
   next: NextFunction,
 ) => {
   const postId = req.params.postId;
-  const email = req.body.email;
   const comment = req.body.comment;
+  const email = (req as ExtendedRequest).user.email;
 
-  // 로그인 확인
-  if (!email) {
-    return res.status(500).json({ message: '로그인 유저가 아닙니다.' });
-  }
-
-  // req에 필요한 데이터가 전부 들어왔는지 확인(로그인 제외)
+  // req에 필요한 데이터가 전부 들어왔는지 확인
   if (!comment) {
     return res
       .status(500)
@@ -42,15 +37,6 @@ export const createComment = async (
 
     throw new Error(`Error searching member: ${err}`);
   }
-
-  // checkUserExist(res, next, email);
-
-  // try {
-  //   checkUserExist(res, next, email);
-  // } catch (err) {
-  //   // throw new Error('에러에러에러에러');
-  //   return new Error('에러에러에러에러');
-  // }
 
   // 존재하는 게시물인지 확인
   const searchPostQuery = 'SELECT * FROM posts WHERE id = ?';
@@ -116,14 +102,9 @@ export const deleteComment = async (
 ) => {
   const postId = req.params.postId;
   const commentId = req.params.commentId;
-  const email = req.params.email;
+  const email = (req as ExtendedRequest).user.email;
 
-  // 로그인 확인
-  if (!email) {
-    return res.status(500).json({ message: '로그인 유저가 아닙니다.' });
-  }
-
-  // req에 필요한 데이터가 전부 들어왔는지 확인(로그인 제외)
+  // req에 필요한 데이터가 전부 들어왔는지 확인
   if (!commentId) {
     return res
       .status(500)
@@ -217,22 +198,21 @@ export const deleteCommentAdmin = async (
   res: Response,
   next: NextFunction,
 ) => {
+  if (!req.user) {
+    return;
+  }
+
   const postId = req.params.postId;
-  const email = req.params.email;
   const commentId = req.params.commentId;
-  const isAdmin = parseInt(req.params.isAdmin);
+  const email = (req as ExtendedRequest).user.email;
+  const isAdmin = (req as ExtendedRequest).user.isAdmin;
 
   // 관리자 요청인지 확인 req.params.isAdmin 정보 확인
   if (!isAdmin) {
     return res.status(500).json({ message: '관리자가 아닙니다.' });
   }
 
-  // 로그인 확인
-  if (!email) {
-    return res.status(500).json({ message: '로그인 유저가 아닙니다.' });
-  }
-
-  // req에 필요한 데이터가 전부 들어왔는지 확인(로그인 제외)
+  // req에 필요한 데이터가 전부 들어왔는지 확인
   if (!commentId) {
     return res
       .status(500)
@@ -328,16 +308,11 @@ export const updateComment = async (
   next: NextFunction,
 ) => {
   const postId = req.params.postId;
-  const email = req.body.email;
   const commentId = req.body.commentId;
   const updatedContent = req.body.updatedContent;
+  const email = (req as ExtendedRequest).user.email;
 
-  // 로그인 확인
-  if (!email) {
-    return res.status(500).json({ message: '로그인 유저가 아닙니다.' });
-  }
-
-  // req에 필요한 데이터가 전부 들어왔는지 확인(로그인 제외)
+  // req에 필요한 데이터가 전부 들어왔는지 확인
   if (!commentId || !updatedContent) {
     return res
       .status(500)

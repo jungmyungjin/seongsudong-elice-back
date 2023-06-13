@@ -4,29 +4,18 @@ import {
   checkExistingUser,
   createUser,
   logout,
-  // googleCallback,
-  // googleLogin,
   loginUser,
+  deleteMember,
 } from '../controllers/member2_controller';
-import { isAdmin } from '../middlewares/isAdmin';
-import passport from 'passport';
-
+const checkAuth = require('../middlewares/check-auth');
 const router = express.Router();
 
-// Passport 초기화 및 미들웨어 설정
-// router.use(passport.initialize());
-// router.use(passport.session());
-
-//index.html 라우터(로컬)
-//router.get('/auth/google', googleStrategy);
-
+//로그인
 router.post('/login', loginUser);
+//회원가입
 router.post('/register', createUser);
-
-// // Google OAuth 인증 요청 처리
-// router.get('/auth/google', googleLogin);
-// router.get('/auth/google/callback', googleCallback);
-// router.post('/logout', logout);
+//로그아웃
+router.post('/logout', logout); //checkAuth 필요?
 
 //기존유저인지조회
 router.get('/existuser-check', async (req: Request, res: Response) => {
@@ -40,43 +29,12 @@ router.get('/existuser-check', async (req: Request, res: Response) => {
   }
 });
 
-// //회원가입
-// router.post('/register', async (req: Request, res: Response) => {
-//   const { email, name, generation } = req.body;
-//   try {
-//     const createdUser = await createUser(email, name, generation);
-//     res.json(createdUser);
-//   } catch (error) {
-//     console.error('An error occurred:', error);
-//     res.status(500).json({ error: 'An error occurred' });
-//   }
-// });
+//유저게시물조회
+router.get('/posts', checkAuth, getMemberPosts);
 
-//멤버게시물조회
-router.get(
-  '/posts',
-  async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      if (!req.user) {
-        throw new Error('User not authenticated');
-      }
-      const { email } = req.user as any;
-      const posts = await getMemberPosts(email);
-      res.json(posts);
-    } catch (error) {
-      next(error);
-    }
-  },
-);
+//유저탈퇴
+router.post('/delete', checkAuth, deleteMember);
 
-// router.post('/register', async (req: Request, res: Response, next: NextFunction) => {
-//   try {
-//     const { email } = req.body;
-//     const user = await findOrCreateUser({ email });
-//     res.json(user);
-//   } catch (error) {
-//     next(error);
-//   }
-// });
+
 
 export default router;

@@ -3,6 +3,7 @@ import { RowDataPacket } from 'mysql2/promise';
 
 import con from '../../connection';
 import { error } from 'console';
+import { ExtendedRequest } from '../types/checkAuth';
 
 // UploadedFile 타입 설정
 interface UploadedFile {
@@ -117,13 +118,20 @@ export const writePost = async (
   res: Response,
   next: NextFunction,
 ) => {
+  const isAdmin = (req as ExtendedRequest).user.isAdmin;
+  const email = (req as ExtendedRequest).user.email;
+
   try {
     const imgPaths = Array.isArray(req.files)
       ? req.files.map((file: UploadedFile) => `uploads/${file.filename}`)
       : [];
     const images = JSON.stringify(imgPaths);
 
-    const { author_email: email, category, title, description } = req.body;
+    const { category, title, description } = req.body;
+
+    if (!isAdmin && category === '공지게시판') {
+      return res.status(401).json({ message: '게시판 사용 권한이 없습니다.' });
+    }
 
     const createPostQuery = `INSERT INTO posts (author_email, category, title, images, description)
       VALUES (?, ?, ?, ?, ?)`;
@@ -186,6 +194,26 @@ export const editPost = async (
   res: Response,
   next: NextFunction,
 ) => {
+  const email = (req as ExtendedRequest).user.email;
+  const postId = req.params.postId;
+  const { title, description } = req.body;
+
+  try {
+    const checkWriterQuery = 'SELECT * FROM posts WHERE id = ?';
+
+    const [response] = (await con
+      .promise()
+      .query(checkWriterQuery, postId)) as RowDataPacket[];
+
+    if (response[0].author_email !== email) {
+      return res.status(403).json({ message: '게시물 수정 권한이 없습니다.' });
+    }
+  } catch (err) {
+    res.status(500).json({ message: '게시물 조회 중 에러가 발생했습니다.' });
+
+    throw new Error(`Error searching posts: ${err}`);
+  }
+
   try {
     console.log(req.body);
     let imgPaths;
@@ -198,9 +226,6 @@ export const editPost = async (
 
       images = JSON.stringify(imgPaths);
     }
-
-    const postId = req.params.postId;
-    const { title, description } = req.body;
 
     if (!images) {
       const updatePostQuery = ` UPDATE posts SET title = ?, description = ? WHERE id = ${postId}`;
@@ -241,8 +266,28 @@ export const removePost = async (
   res: Response,
   next: NextFunction,
 ) => {
+  const postId = req.params.postId;
+  const email = (req as ExtendedRequest).user.email;
+  const isAdmin = (req as ExtendedRequest).user.isAdmin;
+
   try {
-    const postId = req.params.postId;
+    const checkWriterQuery = 'SELECT * FROM posts WHERE id = ?';
+
+    const [response] = (await con
+      .promise()
+      .query(checkWriterQuery, postId)) as RowDataPacket[];
+
+    // 관리자가 아니면서 작성자도 아닌 경우 권한 없음
+    if (response[0].author_email !== email && !isAdmin) {
+      return res.status(403).json({ message: '게시물 삭제 권한이 없습니다.' });
+    }
+  } catch (err) {
+    res.status(500).json({ message: '게시물 조회 중 에러가 발생했습니다.' });
+
+    throw new Error(`Error searching posts: ${err}`);
+  }
+
+  try {
     // 선 댓글 삭제
     const deleteComments = 'DELETE FROM comments WHERE post_id = ?';
     const commentsResult = await con.promise().query(deleteComments, [postId]);

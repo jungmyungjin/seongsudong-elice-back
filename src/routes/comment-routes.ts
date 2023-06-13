@@ -5,15 +5,15 @@ import {
   deleteCommentAdmin,
   updateComment,
 } from '../controllers/comments-controllers';
+const checkAuth = require('../middlewares/check-auth');
 
 const commentRouter = express.Router();
 
+commentRouter.use(checkAuth);
+
 commentRouter.post('/:postId', createComment);
-commentRouter.delete('/:postId/:commentId/:email', deleteComment); // DELETE는 body를 넣을 수 없다!
-commentRouter.delete(
-  '/admin/:postId/:commentId/:email/:isAdmin',
-  deleteCommentAdmin,
-); // DELETE는 body를 넣을 수 없다!
+commentRouter.delete('/:postId/:commentId', deleteComment);
 commentRouter.patch('/:postId', updateComment);
+commentRouter.delete('/admin/:postId/:commentId', deleteCommentAdmin);
 
 export default commentRouter;
