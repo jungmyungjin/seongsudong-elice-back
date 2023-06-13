@@ -6,7 +6,7 @@ import {
   logout,
   loginUser,
   deleteMember,
-} from '../controllers/member2_controller';
+} from '../controllers/member-controllers';
 const checkAuth = require('../middlewares/check-auth');
 const router = express.Router();
 
@@ -34,7 +34,5 @@ router.get('/posts', checkAuth, getMemberPosts);
 
 //유저탈퇴
 router.post('/delete', checkAuth, deleteMember);
-
-
 
 export default router;

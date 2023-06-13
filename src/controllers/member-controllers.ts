@@ -6,7 +6,6 @@ import con from '../../connection';
 const jwt = require('jsonwebtoken');
 import { ExtendedRequest } from '../types/checkAuth';
 
-
 export interface User {
   email: string;
   name: string;
@@ -81,8 +80,6 @@ export const loginUser = async (
       // maxAge: 900000,
       secure: true, // 오직 HTTPS 연결에서만 사용할 수 있게 만든다(true)
       sameSite: 'none', // 만약 sameSite를 None으로 사용한다면 반드시 secure를 true로 설정해야한다.
-      //   secure: process.env.NODE_ENV === 'production', // Use secure cookies in production
-      //   sameSite: 'strict', // Protect against CSRF attacks
     });
 
     return res.status(200).json({
@@ -165,7 +162,6 @@ export function logout(req: Request, res: Response) {
   }
 }
 
-
 //유저게시물조회
 export async function getMemberPosts(req: Request, res: Response) {
   const email = (req as ExtendedRequest).user.email;
@@ -220,7 +216,9 @@ export async function deleteMember(req: Request, res: Response) {
   try {
     // 멤버 존재 여부 확인
     const checkMemberQuery = `SELECT * FROM members WHERE email = '${email}'`;
-    const [memberRows] = await con.promise().query<RowDataPacket[]>(checkMemberQuery);
+    const [memberRows] = await con
+      .promise()
+      .query<RowDataPacket[]>(checkMemberQuery);
     if (memberRows.length === 0) {
       return res.status(404).json({ message: '멤버를 찾을 수 없습니다.' });
     }
