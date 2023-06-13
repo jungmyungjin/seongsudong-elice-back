@@ -198,7 +198,7 @@ export const deleteCommentAdmin = async (
   res: Response,
   next: NextFunction,
 ) => {
-  if (!req.user) {
+  if (!req.user as any) {
     return;
   }
 
