@@ -13,7 +13,6 @@ import accessRouter from './src/routes/access-routes';
 import express from 'express';
 import session from 'express-session';
 import { RowDataPacket } from 'mysql2';
-import passport from 'passport';
 import cors from 'cors';
 import http from 'http';
 import { Server } from 'socket.io';
