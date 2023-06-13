@@ -24,7 +24,7 @@ import { OAuth2Client } from 'google-auth-library';
 //   googleCallbackRedirect,
 //   googleStrategy,
 // } from './src/controllers/members-controllers';
-import { getRoomId, getAllMessages, getMembersMessages, createChatRoom, saveMessages, getLatestMessage, getAllConnectionData } from './src/utils/chat-utils';
+import { getRoomId, getAllMessages, getMembersMessages, createChatRoom, saveMessages, getLatestMessage, getConnectionData } from './src/utils/chat-utils';
 import con from './connection';
 // import { googleCallback, googleLogin } from './src/controllers/member2_controller';
 const cookieParser = require('cookie-parser');
@@ -175,7 +175,6 @@ io.on('connect', socket => {
     //   return;
     // }
     try {
-
       if (!member_email || !sender_email || !message) {
         throw new Error('Required fields are missing.');
       }
@@ -206,14 +205,27 @@ io.on('connect', socket => {
   
       /* 최신 메세지 전송 */
       const latestMessage = await getLatestMessage(roomId);
-      socket.emit('message', latestMessage);
-  
-      /* 접속 유저 리스트 전송 */
-      const connectionData = await getAllConnectionData();
-      socket.emit('isOnline', connectionData);
+      console.log('latestMessage',latestMessage)
+      io.emit('message', latestMessage);
+
     } catch (error) {
       console.error('메세지 처리 중 오류 발생', error);
       socket.emit('messageError', '메세지 처리 중 오류 발생');
+    }
+  });
+
+  /* 접속 유저 리스트 전송 */
+  socket.on('isOnlineStatus', async (member_email, admin_email) => {
+    try {
+      if (!member_email || !admin_email) {
+        throw new Error('Required fields are missing.');
+      }
+  
+      const connectionData = await getConnectionData(member_email, admin_email);
+      io.emit('onlineStatus', connectionData);
+    } catch (error) {
+      console.error('접속 데이터 전송 중 오류 발생', error);
+      socket.emit('isOnlineStatusError', '접속 데이터 전송 중 오류 발생');
     }
   })
 });
