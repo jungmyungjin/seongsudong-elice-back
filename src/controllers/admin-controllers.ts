@@ -10,7 +10,7 @@ export const getUserReservations = async (req: Request, res: Response, next: Nex
     // 사용자를 쿠키에서 확인한 후, 관리자인 경우 예약을 조회
     const isAdmin = (req as ExtendedRequest).user.isAdmin;
 
-    if (!isAdmin) {
+    if (isAdmin) {
         try {
             const { date } = req.params;
             console.log('date', date);
@@ -40,7 +40,7 @@ export const cancelReservationByAdmin = async (req: Request, res: Response, next
     // 사용자를 쿠키에서 확인한 후, 관리자인 경우에만 예약을 취소합니다.
     const isAdmin = (req as ExtendedRequest).user.isAdmin;
 
-    if (!isAdmin) {
+    if (isAdmin) {
         try {
             const { reservationId } = req.params;
 

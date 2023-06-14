@@ -225,17 +225,30 @@ export async function deleteMember(req: Request, res: Response) {
     if (memberRows.length === 0) {
       return res.status(404).json({ message: '멤버를 찾을 수 없습니다.' });
     }
-    // 멤버의 댓글 삭제
-    const deleteCommentsQuery = `DELETE FROM comments WHERE member_email = '${email}'`;
-    await con.promise().query(deleteCommentsQuery);
+
+    const deleteChatMessageQuery = `DELETE FROM chat_messages WHERE sender_email = '${email}'`;
+    await con.promise().query(deleteChatMessageQuery);
+
+    const deleteChatRoom = `DELETE FROM chat_rooms WHERE member_email = '${email}'`;
+    await con.promise().query(deleteChatRoom);
 
     // 멤버의 예약 삭제
     const deleteReservationsQuery = `DELETE FROM reservations WHERE member_email = '${email}'`;
     await con.promise().query(deleteReservationsQuery);
 
+    // 외래 키 제약 조건 비활성화
+    await con.promise().query('SET FOREIGN_KEY_CHECKS = 0');
+
+    // 멤버의 댓글 삭제
+    const deleteCommentsQuery = `DELETE FROM comments WHERE author_email = '${email}'`;
+    await con.promise().query(deleteCommentsQuery);
+
     // 멤버의 게시글 삭제
-    const deletePostsQuery = `DELETE FROM posts WHERE member_email = '${email}'`;
+    const deletePostsQuery = `DELETE FROM posts WHERE author_email = '${email}'`;
     await con.promise().query(deletePostsQuery);
+
+    // 외래 키 제약 조건 다시 활성화
+    await con.promise().query('SET FOREIGN_KEY_CHECKS = 1');
 
     // 멤버 삭제
     const deleteMemberQuery = `DELETE FROM members WHERE email = '${email}'`;
