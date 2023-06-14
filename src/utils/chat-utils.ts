@@ -134,7 +134,6 @@ export const getLatestMessage = async (roomId: number) => {
       WHERE chat_messages.room_id = ? AND chat_messages.sentAt = (SELECT MAX(sentAt) FROM chat_messages WHERE   room_id = ?)
     `;
     const [getLatestMessageResult] = await con.promise().query(getLatestMessageQuery, [roomId, roomId]);
-    console.log(getLatestMessageResult)
     return getLatestMessageResult;
   } catch (error) {
     console.error('Error occurred while getting latest message:', error);
@@ -143,12 +142,17 @@ export const getLatestMessage = async (roomId: number) => {
 }
 
 // 접속 데이터 조회
-export const getAllConnectionData = async () => {
+export const getConnectionData = async (member_email: string, admin_email: string) => {
+  console.log('인자 확인', member_email, admin_email)
   try {
-    const getAllConnectionDataQuery = `SELECT member_email FROM connection_status;`;
-    const [getAllConnectionDataResult] = await con.promise().query(getAllConnectionDataQuery);
-    console.log(getAllConnectionDataResult);
-    return getAllConnectionDataResult;
+    if (!member_email || !admin_email) {
+      throw new Error('Member_email and admin_email are required.');
+    }
+
+    const getConnectionDataQuery = `SELECT member_email FROM connection_status WHERE member_email IN (?, ?);`;
+    const [getConnectionDataResult] = await con.promise().query(getConnectionDataQuery, [member_email, admin_email]);
+    console.log('connectionData', getConnectionDataResult);
+    return getConnectionDataResult;
   } catch (error) {
     console.error('Error occurred while getting all connection data:', error);
     throw new Error('Error occurred while getting all connection data.');
