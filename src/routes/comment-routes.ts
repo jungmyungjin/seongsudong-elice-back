@@ -4,7 +4,7 @@ import {
   deleteComment,
   deleteCommentAdmin,
   updateComment,
-} from '../controllers/comments-controllers';
+} from '../controllers/comment-controllers';
 const checkAuth = require('../middlewares/check-auth');
 
 const commentRouter = express.Router();
