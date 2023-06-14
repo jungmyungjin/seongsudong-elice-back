@@ -4,13 +4,14 @@ import con from '../../connection';
 // roomId 조회 함수
 export const getRoomId = async (member_email: string) => {
   try {
-
     if (!member_email) {
       throw new Error('Member email is required.');
     }
 
     const getRoomIdQuery = `SELECT room_id FROM chat_rooms WHERE member_email = ?;`;
-    const [getRoomIdResult] = await con.promise().query(getRoomIdQuery, [member_email]);
+    const [getRoomIdResult] = await con
+      .promise()
+      .query(getRoomIdQuery, [member_email]);
     
     if (!getRoomIdResult || (getRoomIdResult  as RowDataPacket).length === 0) {
       return null;
@@ -41,7 +42,6 @@ export const getAllMessages = async (roomId: number) => {
     const getAllMessagesResult = await con
       .promise()
       .query(getAllMessagesQuery, [roomId]);
-  
     return getAllMessagesResult[0];
   } catch (error) {
     console.error('Error occurred while getting All Messages:', error);
@@ -56,8 +56,14 @@ export const getMembersMessages = async (member_email: string) => {
       throw new Error('Member email is required.');
     }
 
-    const checkChatRoomQuery = `SELECT room_id, sender_email, message, sentAt FROM chat_messages WHERE sender_email = ? LIMIT 1;`;
-    const [checkResult] = await con.promise().query(checkChatRoomQuery, [member_email]);
+    const checkChatRoomQuery = `
+      SELECT room_id, sender_email, message, sentAt 
+      FROM chat_messages 
+      WHERE sender_email = ? LIMIT 1;
+    `;
+    const [checkResult] = await con
+      .promise()
+      .query(checkChatRoomQuery, [member_email]);
     return checkResult;
   } catch (error) {
       console.error('Error occurred while getting member\'s messages:', error);
@@ -73,7 +79,9 @@ export const createChatRoom = async (member_email: string) => {
     }
 
     const createChatRoomQuery = `INSERT INTO chat_rooms (member_email) VALUES (?);`;
-    const [createChatRoomResult] = await con.promise().query(createChatRoomQuery, [member_email]);
+    const [createChatRoomResult] = await con
+      .promise()
+      .query(createChatRoomQuery, [member_email]);
     const newRoomId = (createChatRoomResult as RowDataPacket).insertId;
     return newRoomId;
   } catch (error) {
@@ -133,7 +141,9 @@ export const getLatestMessage = async (roomId: number) => {
       LEFT JOIN members ON chat_messages.sender_email = members.email 
       WHERE chat_messages.room_id = ? AND chat_messages.sentAt = (SELECT MAX(sentAt) FROM chat_messages WHERE   room_id = ?)
     `;
-    const [getLatestMessageResult] = await con.promise().query(getLatestMessageQuery, [roomId, roomId]);
+    const [getLatestMessageResult] = await con
+      .promise()
+      .query(getLatestMessageQuery, [roomId, roomId]);
     return getLatestMessageResult;
   } catch (error) {
     console.error('Error occurred while getting latest message:', error);
@@ -143,15 +153,19 @@ export const getLatestMessage = async (roomId: number) => {
 
 // 접속 데이터 조회
 export const getConnectionData = async (member_email: string, admin_email: string) => {
-  console.log('인자 확인', member_email, admin_email)
   try {
     if (!member_email || !admin_email) {
       throw new Error('Member_email and admin_email are required.');
     }
 
-    const getConnectionDataQuery = `SELECT member_email FROM connection_status WHERE member_email IN (?, ?);`;
-    const [getConnectionDataResult] = await con.promise().query(getConnectionDataQuery, [member_email, admin_email]);
-    console.log('connectionData', getConnectionDataResult);
+    const getConnectionDataQuery = `
+      SELECT member_email 
+      FROM connection_status 
+      WHERE member_email IN (?, ?);
+    `;
+    const [getConnectionDataResult] = await con
+      .promise()
+      .query(getConnectionDataQuery, [member_email, admin_email]);
     return getConnectionDataResult;
   } catch (error) {
     console.error('Error occurred while getting all connection data:', error);
