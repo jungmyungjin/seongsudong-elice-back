@@ -1,6 +1,6 @@
 import express, { Request, Response, NextFunction } from 'express';
 import {
-    createReservation, seatCheck, getMyReservation, cancelReservation, sendEmailToUser
+    createReservation, seatCheck, getMyReservation, cancelReservation, sendEmailToUser, getReservationCountByDate, getUserReservationCount
 } from '../controllers/reservations-controller';
 const checkAuth = require('../middlewares/check-auth');
 const router = express.Router();
@@ -19,6 +19,12 @@ router.get('/reservation-check', checkAuth, getMyReservation);
 
 // 다른이메일로 예약정보 받기
 router.post('/send-email', checkAuth, sendEmailToUser);
+
+// 날짜별 이용자 수 조회
+router.get('/users/:date', getReservationCountByDate);
+
+// 날짜별 예약건 수 조회
+router.get('/:date', getUserReservationCount)
 
 
 export default router;
