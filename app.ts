@@ -126,37 +126,55 @@ app.use('/api/access', accessRouter);
 io.on('connect', socket => {
   console.log('connected!!!');
 
-  // let currentRoomId: any;
+  //let currentRoomId: any;
 
   /* 채팅방 입장: 해당 채팅방의 모든 메세지 가져오기 */
   socket.on('enterChatRoom', async (member_email: string) => {
     try {
-
+      console.log(member_email)
       if (!member_email) {
         throw new Error('Required fields are missing.');
       }
 
       // roomId 찾아오기
       const roomId = await getRoomId(member_email);
-      console.log(roomId);
+      console.log('foundRoomId:', roomId);
   
-      // if (currentRoomId) {
-      //   socket.leave(currentRoomId);
-      //   console.log(`Left room ${currentRoomId}`);
-      // }
-  
-      if (roomId) {
-        console.log("It's not the first message. Got roomId!");
-      } else {
+      if (!roomId) {
         console.log('Room not found. Returning empty array.');
         /* if (!방) {'메세지 없다'} -> null 전송 */
         socket.emit('AllMessages', null);
         return;
       }
-  
+
+      // 사용자가 기존의 채팅방에 있었다면 나가기
+      //if (currentRoomId) {
+      //   socket.leave(currentRoomId);
+      //   console.log(`Left room ${currentRoomId}`);
+      //}
+
+      // 새로운 채팅방 참여
+      socket.join(roomId);
+      //currentRoomId = roomId;
+      console.log(`Entered room ${roomId}!`);
+
+      const room = io.sockets.adapter.rooms.get(roomId);
+
+// Check if the room exists
+if (room) {
+  // Convert the Set of sockets to an array of socket IDs
+  const clients = Array.from(room);
+
+  // Iterate over the clients and access their socket IDs
+  clients.forEach(clientId => {
+    console.log(`(E)Client ${clientId} is in the room ${roomId}`);
+  });
+} else {
+  console.log(`(E)Room ${roomId} does not exist`);
+}
+
       // 해당 방의 모든 메세지 가져오기
       const allMessages = await getAllMessages(roomId);
-      console.log(allMessages);
   
       /* 가져온 메세지를 클라이언트로 전송 */
       socket.emit('AllMessages', allMessages);
@@ -174,12 +192,13 @@ io.on('connect', socket => {
     //   console.log("Socket is not in any room. Cannot send message.");
     //   return;
     // }
+
     try {
       if (!member_email || !sender_email || !message) {
         throw new Error('Required fields are missing.');
       }
 
-      let roomId;
+      let roomId: any;
   
       // 보낸 메세지 가져오기
       const membersMessages = await getMembersMessages(member_email);
@@ -191,14 +210,30 @@ io.on('connect', socket => {
         // 보낸 메세지가 없으면, 채팅방 생성 및 roomId 업데이트
         const newRoomId = await createChatRoom(member_email);
         roomId = newRoomId;
-        console.log('ChatRoom created!', roomId);
+        console.log('ChatRoom created!', roomId); 
   
         /* socket ROOM 입장 */
         socket.join(roomId);
-        // currentRoomId = roomId;
+        //currentRoomId = roomId;
         console.log(`Entered in ${roomId}!`);
       }
     
+          // Assuming you have the roomId stored in a variable called 'roomId'
+const room = io.sockets.adapter.rooms.get(roomId);
+
+// Check if the room exists
+if (room) {
+  // Convert the Set of sockets to an array of socket IDs
+  const clients = Array.from(room);
+
+  // Iterate over the clients and access their socket IDs
+  clients.forEach(clientId => {
+    console.log(`(M)Client ${clientId} is in the room ${roomId}`);
+  });
+} else {
+  console.log(`(M)Room ${roomId} does not exist`);
+}
+
       // 메세지 db 저장
       await saveMessages(roomId, sender_email, message);
       console.log('Messages saved!', message);
@@ -206,8 +241,7 @@ io.on('connect', socket => {
       /* 최신 메세지 전송 */
       const latestMessage = await getLatestMessage(roomId);
       console.log('latestMessage',latestMessage)
-      io.emit('message', latestMessage);
-
+      io.to(roomId).emit('latestMessage', latestMessage);
     } catch (error) {
       console.error('메세지 처리 중 오류 발생', error);
       socket.emit('messageError', '메세지 처리 중 오류 발생');
