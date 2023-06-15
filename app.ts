@@ -61,7 +61,7 @@ const io = new Server(server, {
 
 app.use('/uploads', express.static('uploads'));
 
-app.listen(process.env.PORT || 8080, () => {
+app.listen(8000, () => {
   console.log('server on!');
 });
 
@@ -111,7 +111,23 @@ io.on('connect', socket => {
     }
   });
 
-  /* 메세지 받고 주기: 첫 메세지일 경우 채팅방 생성 */
+  /* 채팅방 생성하기 */
+  socket.on(
+    'createChatRoom', 
+    async (member_email: string) => {
+      try {
+        const newRoomId = await createChatRoom(member_email);
+        const roomId = newRoomId;
+  
+        socket.join(roomId);
+        console.log(`Entered in ${roomId}!`);
+      } catch (error) {
+        console.error('채팅방 생성 중 에러 발생', error);
+        socket.emit('createChatRoomError', '채팅방 생성 중 에러 발생');      
+      }
+  })
+
+  /* 메세지 받고 주기 */
   socket.on(
     'message',
     async (member_email: string, sender_email: string, message: string) => {
@@ -122,23 +138,18 @@ io.on('connect', socket => {
 
         let roomId;
 
-        const membersMessages = await getMembersMessages(member_email);
-
-        if ((membersMessages as RowDataPacket).length > 0) {
-          roomId = (membersMessages as RowDataPacket)[0].room_id;
-          console.log("It's not the first msg. Got roomId!");
+        if (sender_email === member_email) {
+          roomId = await getRoomId(member_email);
         } else {
-          // 멤버가 보낸 메세지가 없으면, 채팅방 생성 및 roomId 업데이트
-          const newRoomId = await createChatRoom(member_email);
-          roomId = newRoomId;
-
-          socket.join(roomId);
-          console.log(`Entered in ${roomId}!`);
+          const membersMessages = await getMembersMessages(member_email);
+          roomId = (membersMessages as RowDataPacket)[0].room_id;
         }
+
+        socket.join(roomId);
+        console.log(`Entered in ${roomId}!`);
 
         await saveMessages(roomId, sender_email, message);
 
-        /* 최신 메세지 전송 */
         const latestMessage = await getLatestMessage(roomId);
         io.to(roomId).emit('latestMessage', latestMessage);
       } catch (error) {
