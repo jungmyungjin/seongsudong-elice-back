@@ -78,7 +78,7 @@ export const createReservation = async (
           reservation_id,
           generation,
           name,
-          email,
+          member_email,
           reservation_date,
           start_time,
           end_time,
