@@ -19,17 +19,13 @@ export const loginUser = async (
   res: Response,
   next: NextFunction,
 ) => {
-  const redirectURI = 'http://localhost:3000'; // 로그인 완료 후 리디렉션할 URI
-
-  const oAuth2Client = new google.auth.OAuth2(
-    process.env.CLIENT_ID,
-    process.env.CLIENT_SECRET,
-    redirectURI,
-  );
-
   let decodedToken;
-
   try {
+    const oAuth2Client = new google.auth.OAuth2(
+      process.env.CLIENT_ID,
+      process.env.CLIENT_SECRET,
+      process.env.CALLBACK_URL,
+    );
     const { tokens } = await oAuth2Client.getToken(req.body.code);
 
     if (!tokens.access_token || !tokens.id_token) {
@@ -43,8 +39,7 @@ export const loginUser = async (
     }
   } catch (err) {
     res.status(500).json({ message: '로그인 처리 중 에러가 발생했습니다.' });
-
-    next(err);
+    return next(err); // 에러가 나서 바로 종료
   }
 
   // 유저 조회
@@ -76,6 +71,8 @@ export const loginUser = async (
     );
 
     res.cookie('elice_token', customJWT, {
+      path: '/',
+      domain: process.env.COOKIE_DOMAIN,
       httpOnly: true, // document.cookie API로는 사용할 수 없게 만든다(true).
       secure: true, // 오직 HTTPS 연결에서만 사용할 수 있게 만든다(true)
       sameSite: 'none', // 만약 sameSite를 None으로 사용한다면 반드시 secure를 true로 설정해야한다.
@@ -151,7 +148,13 @@ export function logout(req: Request, res: Response) {
   try {
     // 쿠키 삭제 및 로그아웃 메시지 전달
     return res
-      .clearCookie('elice_token', { path: '/', domain: 'localhost' })
+      .clearCookie('elice_token', {
+        path: '/',
+        domain: process.env.COOKIE_DOMAIN,
+        httpOnly: true,
+        secure: true,
+        sameSite: 'none',
+      })
       .status(200)
       .json({ message: '로그아웃이 완료되었습니다.' })
       .end();

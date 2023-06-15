@@ -34,7 +34,12 @@ app.use(express.json());
 app.use(cookieParser());
 app.use(
   cors({
-    origin: 'http://localhost:3000',
+    origin: [
+      'https://www.firefighter.today',
+      'http://www.firefighter.today',
+      'http://localhost:3000',
+      process.env.CALLBACK_URL || '',
+    ],
     credentials: true,
     allowedHeaders: ['Origin', 'X-Requested-With', 'Content-Type', 'Accept'],
     exposedHeaders: ['set-cookie'],
@@ -156,22 +161,21 @@ io.on('connect', socket => {
         console.error('메세지 처리 중 오류 발생', error);
         socket.emit('messageError', '메세지 처리 중 오류 발생');
       }
-    });
-    
+    },
+  );
+
   /* 접속 유저 리스트 전송 */
-  socket.on(
-    'isOnlineStatus', 
-    async (member_email, admin_email) => {
-      try {
-        if (!member_email || !admin_email) {
-          throw new Error('Required fields are missing.');
-        }
-    
-        const connectionData = await getConnectionData(member_email, admin_email);
-        io.emit('onlineStatus', connectionData);
-      } catch (error) {
-        console.error('접속 데이터 전송 중 오류 발생', error);
-        socket.emit('isOnlineStatusError', '접속 데이터 전송 중 오류 발생');
+  socket.on('isOnlineStatus', async (member_email, admin_email) => {
+    try {
+      if (!member_email || !admin_email) {
+        throw new Error('Required fields are missing.');
       }
-    });
+
+      const connectionData = await getConnectionData(member_email, admin_email);
+      io.emit('onlineStatus', connectionData);
+    } catch (error) {
+      console.error('접속 데이터 전송 중 오류 발생', error);
+      socket.emit('isOnlineStatusError', '접속 데이터 전송 중 오류 발생');
+    }
+  });
 });
