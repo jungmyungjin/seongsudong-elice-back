@@ -122,7 +122,6 @@ export const createReservation = async (
 
         return res.status(201).json({ message: '예약이 완료되었습니다.', reservation: reservation });
     } catch (err) {
-        console.error(err);
         return Promise.reject(err);
     }
 };
@@ -131,7 +130,6 @@ export const createReservation = async (
 export const seatCheck = async (req: Request, res: Response): Promise<{ [seatNumber: string]: any } | Response> => {
     try {
         const { reservation_date } = req.query;
-        console.log(reservation_date)
 
         // 예약 조회
         const getReservationsQuery = `
@@ -168,12 +166,10 @@ export const seatCheck = async (req: Request, res: Response): Promise<{ [seatNum
         });
 
         // 예약된 좌석 확인
-        console.log('예약좌석확인', reservations)
         reservations.forEach((reservation: RowDataPacket) => {
             const startTime = reservation.start_time;
             const endTime = reservation.end_time;
             const seatNumber = reservation.seat_number;
-            console.log('시작시간: ', startTime, '종료시간: ', endTime)
 
             if (startTime <= '10:00' && endTime >= '14:00') {
                 seatAvailability[seatNumber].available10to14 = false;
@@ -189,110 +185,9 @@ export const seatCheck = async (req: Request, res: Response): Promise<{ [seatNum
         });
         return res.status(200).json(seatAvailability);
     } catch (err) {
-        console.error(err);
         return Promise.reject(err);
     }
 };
-
-// 날짜+시간받아와서 하는 좌석조회
-// export const seatCheck = async (req: Request, res: Response): Promise<{ [seatNumber: string]: any } | Response> => {
-//     const email = (req as ExtendedRequest).user.email;
-
-//     // 로그인 확인
-//     if (!email) {
-//         return res.status(500).json({ message: '로그인이 필요한 기능입니다.' });
-//     }
-//     try {
-//         const { reservation_date } = req.query;
-
-//         // 예약 조회
-//         const getReservationsQuery = `
-//             SELECT *
-//             FROM reservations
-//             WHERE reservation_date = ?
-//         `;
-//         const [reservationRows] = await con.promise().query<RowDataPacket[]>(getReservationsQuery, [
-//             reservation_date,
-//         ]);
-//         const reservations: RowDataPacket[] = reservationRows;
-
-//         // 모든 좌석 정보 조회
-//         const getSeatsQuery = `
-//             SELECT seat_number, seat_type
-//             FROM seats
-//         `;
-//         const [seatRows] = await con.promise().query<RowDataPacket[]>(getSeatsQuery);
-//         const seats: RowDataPacket[] = seatRows;
-
-
-//         // 시간대별 예약 가능 여부 초기화
-//         const seatAvailability: { [seatNumber: string]: any } = {};
-
-//         // 시간대별로 예약 가능 여부와 좌석 번호를 저장하기 위해 좌석 정보를 초기화
-//         seats.forEach((seat: RowDataPacket) => {
-//             const seatNumber = seat.seat_number;
-//             //const startTime = 
-//             seatAvailability[seatNumber] = {
-//                 seat_type: seat.seat_type,
-//                 available10to14: true,
-//                 available14to18: true,
-//                 available18to22: true
-//             };
-
-//             const originalCurrentDate = new Date().toLocaleString("en-US", {
-//                 timeZone: "Asia/Seoul",
-//                 year: "numeric",
-//                 month: "2-digit",
-//                 day: "2-digit",
-//                 hour12: false, // 24시간 형식으로 표시,
-//                 hour: "2-digit",
-//                 minute: "2-digit",
-//             });
-
-//             const [currentDatePart, currentTimePart] = originalCurrentDate.split(", ");
-//             const [month, day, year] = currentDatePart.split("/");
-//             const [time, meridian] = currentTimePart.split(" ");
-//             const [hours, minutes] = time.split(":");
-//             //const currentDateTime = `${year}-${month}-${day} ${hours}:${minutes}`;
-//             //const reservationDateTime = `${reservation_date} ${startTime}`;
-//             //시간을 못받아 날짜로만 조회하기
-//             const currentDateTime = `${year}-${month}-${day}`;
-//             const reservationDateTime = `${reservation_date}`;
-
-//             if (reservationDateTime <= currentDateTime) {
-//                 // 날짜가 현재 날짜보다 이전인 경우
-//                 console.log('예약하려는 날짜/시간이 현재 날짜/시간 보다 뒤입니다.')
-//                 seatAvailability[seatNumber].available10to14 = false;
-//                 seatAvailability[seatNumber].available14to18 = false;
-//                 seatAvailability[seatNumber].available18to22 = false;
-//             }
-//         });
-
-//         // 예약된 좌석 확인
-//         console.log('예약좌석확인', reservations)
-//         reservations.forEach((reservation: RowDataPacket) => {
-//             const startTime = reservation.start_time;
-//             const endTime = reservation.end_time;
-//             const seatNumber = reservation.seat_number;
-
-//             if (startTime <= '10:00' && endTime >= '14:00') {
-//                 seatAvailability[seatNumber].available10to14 = false;
-//             }
-
-//             if (startTime <= '14:00' && endTime >= '18:00') {
-//                 seatAvailability[seatNumber].available14to18 = false;
-//             }
-
-//             if (startTime <= '18:00' && endTime >= '22:00') {
-//                 seatAvailability[seatNumber].available18to22 = false;
-//             }
-//         });
-//         return res.status(200).json(seatAvailability);
-//     } catch (err) {
-//         console.error(err);
-//         return Promise.reject(err);
-//     }
-// };
 
 // 예약 취소(일반사용자)
 export const cancelReservation = async (
@@ -436,7 +331,7 @@ export const sendEmailToUser = async (
             return res.status(404).json({ error: '예약을 찾을 수 없습니다.' });
         }
         // 이메일 보내기
-        const emailText = `성수동 엘리스를 이용해 주셔서 감사합니다. \n \n${reservation.member_name}님의 엘리스랩 예약이 아래와 같이 완료되었습니다.\n예약 ID: ${reservation.reservation_id} \n예약일자: ${reservation.reservation_date} ${reservation.start_time}~${reservation.end_time} \n예약좌석: ${reservation.seat_type} ${reservation.seat_number}번 \n\n예약시간을 꼭 지켜주세요.`;
+        const emailText = `성수동 엘리스를 이용해 주셔서 감사합니다. \n \n${reservation.name}님의 엘리스랩 예약이 아래와 같이 완료되었습니다.\n예약 ID: ${reservation.reservation_id} \n예약일자: ${reservation.reservation_date} ${reservation.start_time}~${reservation.end_time} \n예약좌석: ${reservation.seat_type} ${reservation.seat_number}번 \n\n예약시간을 꼭 지켜주세요.`;
         const emailSubject = '성수동 엘리스 예약이 완료되었습니다.';
         const receiver = newEmail;
         sendEmail(receiver, emailSubject, emailText)
@@ -451,7 +346,6 @@ export const sendEmailToUser = async (
 export const getReservationCountByDate = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const { date } = req.params;
-        console.log('date', date);
 
         // 날짜 형식 검증
         const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
@@ -466,7 +360,7 @@ export const getReservationCountByDate = async (req: Request, res: Response, nex
         WHERE reservation_date = ?
       `;
         const [countRows] = await con.promise().query<RowDataPacket[]>(getReservationCountQuery, [date]);
-        console.log(countRows);
+ 
         let personalSeatCount = 0;
         let groupSeatCount = 0;
 
@@ -507,11 +401,9 @@ export const getReservationCountByDate = async (req: Request, res: Response, nex
 
         // 총 이용자 수 계산
         const totalUserCount = personalSeatCount + groupSeatCount;
-        console.log('totalUserCount', totalUserCount);
 
         return res.status(200).json({ totalUserCount: totalUserCount });
     } catch (err) {
-        console.error(err);
         return Promise.reject(err)
     }
 };
@@ -520,7 +412,6 @@ export const getReservationCountByDate = async (req: Request, res: Response, nex
 export const getUserReservationCount = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const { date } = req.params;
-        console.log('date', date);
 
         // 날짜 형식 검증
         const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
@@ -536,11 +427,9 @@ export const getUserReservationCount = async (req: Request, res: Response, next:
         `;
         const [countRows] = await con.promise().query<RowDataPacket[]>(getReservationCountQuery, [date]);
         const count = countRows[0].count;
-        console.log('count', count);
 
         return res.status(200).json({ count });
     } catch (err) {
-        console.error(err);
         return Promise.reject(err)
     }
 };
