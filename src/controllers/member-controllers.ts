@@ -77,7 +77,6 @@ export const loginUser = async (
 
     res.cookie('elice_token', customJWT, {
       httpOnly: true, // document.cookie API로는 사용할 수 없게 만든다(true).
-      // maxAge: 900000,
       secure: true, // 오직 HTTPS 연결에서만 사용할 수 있게 만든다(true)
       sameSite: 'none', // 만약 sameSite를 None으로 사용한다면 반드시 secure를 true로 설정해야한다.
     });
@@ -138,7 +137,6 @@ export async function checkExistingUser(email: string): Promise<any> {
 
     if (rows.length > 0) {
       const user = rows[0] as any;
-      console.log('이미 있는 유저', user);
       return { existing: true, user };
     } else {
       return { existing: false };
@@ -202,11 +200,9 @@ export async function getMemberPosts(req: Request, res: Response) {
       generation: row.generation,
       isAdmin: row.isAdmin,
     }));
-    console.log(posts);
     return posts;
   } catch (error) {
-    console.error('An error occurred in getMemberPosts:', error);
-    throw error;
+    return Promise.reject(error);
   }
 }
 
