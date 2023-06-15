@@ -274,10 +274,6 @@ export const getMyReservation = async (
         if (email !== userEmail) {
             throw new Error('내 예약만 조회할 수 있습니다.');
         }
-        // 현재 날짜 및 시간
-        // const currentDate = new Date();
-        
-        
         // 현재 날짜와 예약된 날짜 비교 
         const originalCurrentDate = new Date();
         const year = originalCurrentDate.getFullYear();
