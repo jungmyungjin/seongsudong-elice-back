@@ -19,7 +19,6 @@ export const loginUser = async (
   res: Response,
   next: NextFunction,
 ) => {
-  console.log('try');
   const redirectURI = 'http://localhost:3000'; // 로그인 완료 후 리디렉션할 URI
 
   const oAuth2Client = new google.auth.OAuth2(
@@ -31,21 +30,21 @@ export const loginUser = async (
   let decodedToken;
 
   try {
-    console.log('tryy');
-    console.log(req.body.code);
     const { tokens } = await oAuth2Client.getToken(req.body.code);
+
     if (!tokens.access_token || !tokens.id_token) {
-      console.log('어허');
-      throw new Error('1로그인 처리 중 에러가 발생했습니다.');
+      throw new Error('로그인 처리 중 에러가 발생했습니다.');
     }
 
     decodedToken = jwt.decode(tokens.id_token);
-    console.log(decodedToken);
+
     if (!decodedToken.email_verified) {
       throw new Error('유효하지 않은 이메일입니다.');
     }
   } catch (err) {
-    return res.status(500).json({ message: '2로그인 처리 중 에러가 발생했습니다.' });
+    res.status(500).json({ message: '로그인 처리 중 에러가 발생했습니다.' });
+
+    next(err);
   }
 
   // 유저 조회
@@ -78,7 +77,7 @@ export const loginUser = async (
 
     res.cookie('elice_token', customJWT, {
       httpOnly: true, // document.cookie API로는 사용할 수 없게 만든다(true).
-      maxAge: 900000,
+      // maxAge: 900000,
       secure: true, // 오직 HTTPS 연결에서만 사용할 수 있게 만든다(true)
       sameSite: 'none', // 만약 sameSite를 None으로 사용한다면 반드시 secure를 true로 설정해야한다.
     });
@@ -91,7 +90,9 @@ export const loginUser = async (
       isAdmin: response[0].isAdmin === 0 ? 0 : 1,
     });
   } catch (err) {
-    return res.status(500).json({ message: '3로그인 처리 중 에러가 발생했습니다.' });
+    res.status(500).json({ message: '로그인 처리 중 에러가 발생했습니다.' });
+
+    next(err);
   }
 };
 
@@ -121,7 +122,7 @@ export const createUser = async (
   } catch (err) {
     res.status(500).json({ message: '회원가입이 실패했습니다.' });
 
-    //next(err);
+    next(err);
   }
 };
 
@@ -229,7 +230,7 @@ export async function deleteMember(req: Request, res: Response) {
     await con.promise().query(deleteChatRoom);
 
     // 멤버의 예약 삭제
-    const deleteReservationsQuery = `DELETE FROM reservations WHERE email = '${email}'`;
+    const deleteReservationsQuery = `DELETE FROM reservations WHERE member_email = '${email}'`;
     await con.promise().query(deleteReservationsQuery);
 
     // 외래 키 제약 조건 비활성화
