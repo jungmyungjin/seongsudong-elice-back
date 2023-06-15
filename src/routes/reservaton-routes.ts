@@ -5,8 +5,6 @@ import {
 const checkAuth = require('../middlewares/check-auth');
 const router = express.Router();
 
-//router.use(checkAuth);
-
 // 예약 생성
 router.post('/', checkAuth, createReservation);
 
@@ -27,7 +25,6 @@ router.get('/users/:date', getReservationCountByDate);
 
 // 날짜별 예약건 수 조회
 router.get('/:date', getUserReservationCount)
-
 
 // 다른이메일로 예약정보 받기
 router.post('/send-email', sendEmailToUser);
