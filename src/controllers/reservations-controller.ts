@@ -76,9 +76,9 @@ export const createReservation = async (
         const createReservationQuery = `
         INSERT INTO reservations (
           reservation_id,
-          member_generation,
-          member_name,
-          member_email,
+          generation,
+          name,
+          email,
           reservation_date,
           start_time,
           end_time,
