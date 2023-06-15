@@ -275,18 +275,32 @@ export const getMyReservation = async (
             throw new Error('내 예약만 조회할 수 있습니다.');
         }
         // 현재 날짜 및 시간
-        const currentDate = new Date();
+        // const currentDate = new Date();
+        
+        
+        // 현재 날짜와 예약된 날짜 비교 
+        const originalCurrentDate = new Date();
+        const year = originalCurrentDate.getFullYear();
+        const month = String(originalCurrentDate.getMonth() + 1).padStart(2, '0');
+        const day = String(originalCurrentDate.getDate()).padStart(2, '0');
+        const currentDate = `${year}-${month}-${day}`;
+
+        // 현재시간
+        const options = { timeZone: 'Asia/Seoul', hour12: false };
+        const currentTime = new Date().toLocaleTimeString('en-US', options);
+
+        const currentDateTime = currentDate + ' ' + currentTime;
 
         // 지난 예약 조회
         const pastReservationsQuery = `
             SELECT *
             FROM reservations
-            WHERE member_email = ? AND reservation_date < ?
+            WHERE member_email = ? AND CONCAT(reservation_date, ' ', start_time, ':00') < ?
         `;
 
         const [pastReservationRows] = await con.promise().query<RowDataPacket[]>(pastReservationsQuery, [
             email,
-            currentDate,
+            currentDateTime,
         ]);
         const pastReservations: RowDataPacket[] = pastReservationRows;
 
@@ -294,11 +308,11 @@ export const getMyReservation = async (
         const upcomingReservationsQuery = `
             SELECT *
             FROM reservations
-            WHERE member_email = ? AND reservation_date >= ?
+            WHERE member_email = ? AND CONCAT(reservation_date, ' ', start_time, ':00') >= ?
         `;
         const [upcomingReservationRows] = await con.promise().query<RowDataPacket[]>(upcomingReservationsQuery, [
             email,
-            currentDate,
+            currentDateTime,
         ]);
         const upcomingReservations: RowDataPacket[] = upcomingReservationRows;
 
