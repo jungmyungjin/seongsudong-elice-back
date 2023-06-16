@@ -1,7 +1,39 @@
-import { Request, Response, NextFunction } from 'express';
+import { Request, Response, NextFunction, Router } from 'express';
 import { ResultSetHeader, RowDataPacket } from 'mysql2/promise';
+import jwt, { JwtPayload } from 'jsonwebtoken';
 
 import con from '../../connection';
+
+const router = Router();
+
+interface DecodedToken extends JwtPayload {
+  email: string;
+  isAdmin: boolean;
+}
+
+export const isUserAccess = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): Promise<Response | void> => {
+  const token: string | undefined = req.cookies?.elice_token;
+
+  if (token) {
+    const decodedToken: DecodedToken | string = jwt.verify(
+      token,
+      process.env.JWT_SECRET_KEY || '',
+    ) as DecodedToken;
+
+    if (decodedToken) {
+      return res
+        .status(200)
+        .json({ email: decodedToken.email, isAdmin: decodedToken.isAdmin })
+        .end();
+    }
+  } else {
+    return res.status(204).end();
+  }
+};
 
 // 로그인 시 유저의 접속 상태를 활성화하는 함수
 export const setUserAccess = async (
