@@ -147,6 +147,10 @@ export async function checkExistingUser(email: string): Promise<any> {
 //로그아웃
 export function logout(req: Request, res: Response) {
   try {
+    const token: string | undefined = req.cookies?.elice_token;
+    if (!token) {
+      return res.status(204).end();
+    }
     // 쿠키 삭제 및 로그아웃 메시지 전달
     return res
       .clearCookie('elice_token', {
